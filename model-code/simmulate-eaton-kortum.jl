@@ -46,7 +46,7 @@ function beta_moment_model(pricemat, πshares)
     # Exclude zeros and diagonal entries
     notzeros = (Xni .≈ 0.0) .| (Xni .≈ 1.0)
 
-    # println("trade", mean( log.(Xni[.!notzeros]) ))
+    # println("trade", mean( log.(Xni[.!notzeros]) ), mean(πshares[.!notzeros]) )
 
     β = mean( log.(Xni[.!notzeros]) ) / mean( dni[.!notzeros] )
 
@@ -77,7 +77,7 @@ end
 
 
 
-function generate_moments(trade_parameters, Nruns; model = "ek", code = 1, Nprices = 70, Ngoods = 100000)
+function generate_moments(trade_parameters, Nruns; model = "ek", code = 1, Nprices = 70, Ngoods = 200000)
     # multiple dispatch version of the generate_moments function to generate a bunch of betas
 
     β = Array{Float64}(undef, Nruns)
@@ -105,13 +105,14 @@ function generate_moments(trade_parameters; model = "ek", code = 1, Nprices = 70
     prices = Array{Float64}(undef, length(Ncntry), Ngoods)
 
     if model == "ek"
-        # this is the EK model
+        # println("this is the EK model")
         πshares, prices = sim_trade_pattern_ek(trade_parameters; Ngoods = Ngoods, code = code)
 
     elseif model == "bejk"
-        # this is the BEJK model
-        πshares, prices = sim_trade_pattern_bejk(trade_parameters.S, trade_parameters.d, trade_parameters.θ, 
-            trade_parameters.σ; Ngoods = Ngoods, code = code)
+        # print("this is the BEJK model")
+        πshares, prices = sim_trade_pattern_bejk(trade_parameters; Ngoods = Ngoods, code = code)
+    else
+        error("Model not recognized. Use 'ek' or 'bejk'.")
     end
         
     sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
@@ -200,12 +201,12 @@ end
 ###############################################################
 ###############################################################
 
-function sim_trade_pattern_ek(trade_parameters; Ngoods = 200000, code = 1)
+function sim_trade_pattern_ek(trade_parameters; Ngoods = 100000, code = 1)
     # multiple dispatch version of the sim_trade_pattern_ek function
     # this allows me to pass the trade_parameters structure and it will work
 
     return sim_trade_pattern_ek(trade_parameters.S, trade_parameters.d,  trade_parameters.θ, 
-        trade_parameters.σ, Ngoods = Ngoods, code = code)
+        trade_parameters.σ; Ngoods = Ngoods, code = code)
 
 end
 
@@ -335,7 +336,9 @@ function marginal_cost_second(u, first_price, S, θ)
     # takes random number u, productivity S and frechet shape parameters
     # θ and returns the marginal cost of producing a good
 
-    return ( log(u) / (-S) + (1 / first_price)^ (-θ) )^ (one(θ) / θ)
+    return ( log(u) / (-S) + (first_price)^ (θ) )^ (one(θ) / θ)
+
+    # (log(u2)./(-S(j)) + (p1const(:,j).^-1).^(-theta)).^(-1./theta);
 
     # Second draw, second best productivity, this comes from
     # 1-exp(-S*z_two^(-θ) + S*z_one^(-θ)) 
@@ -354,6 +357,9 @@ function sim_trade_pattern_bejk(trade_parameters; Ngoods = 100000, code = 1)
 
 end
 
+###############################################################
+###############################################################
+
 function sim_trade_pattern_bejk(S, d, θ, σ; Ngoods = 100000, code = 1)
     # A function to simmulate a pattern of trade and then generate a trade
     # share matrix and a random sample of final goods prices given bertrand
@@ -363,7 +369,7 @@ function sim_trade_pattern_bejk(S, d, θ, σ; Ngoods = 100000, code = 1)
 
     inv_Ngoods = 1 / Ngoods
 
-    markup = σ / (σ - 1)
+    markup = σ / (σ - one(σ))
 
     ###########################################################
     # Draw productivities and compute unit costs to produce each good in 
@@ -401,7 +407,7 @@ function sim_trade_pattern_bejk(S, d, θ, σ; Ngoods = 100000, code = 1)
 
     rec_low_price = Array{Float64}(undef, Ncntry, Ngoods)
 
-    rec_cost = Array{Float64}(undef, Ncntry, Ngoods)
+    # rec_cost = Array{Float64}(undef, Ncntry, Ngoods)
 
     @inbounds for gd in 1:Ngoods # This is the good
 
@@ -412,43 +418,57 @@ function sim_trade_pattern_bejk(S, d, θ, σ; Ngoods = 100000, code = 1)
             # 2. Need to find the price charged by the low cost producer which
             # is either the 2nd domestic low cost producer, the 2nd foreign low cost producer or the monopolist price.
 
-            low_cost = p1const[im, gd]
+            # this is how the old matlab code worked, the first julia BEJK version put together earlier was not correct (unsure why)
+            # The first step is to find the two lowest international cost producers
+        
+            cif_price1 = d[im, 1] * p1const[1,gd]
+            
+            cif_price2 = d[im, 2] * p1const[2,gd]
+           
+            if cif_price1 < cif_price2 # if the first country is lower, its low cost
 
-            low2_cost = p2const[im, gd]
+               low_cost = cif_price1
 
-            min_ex = im
+               low2_cost = cif_price2 # second country is second lowest
+                
+               min_ex = 1
+            else # if the second country is lower, its low cost 1 is second lowest
+               
+                low_cost = cif_price2
+               
+                low2_cost = cif_price1 # first country is second lowest
+               
+                min_ex = 2
+            end
 
-            for ex in 1:Ncntry
+
+            for ex in 3:Ncntry
+                # now walk through remaining potential exporters
 
                 cif_price = d[im, ex] * p1const[ex, gd]
+                # this is the price of the exporter
 
-                if cif_price < low_cost # if the price is lower than the current low price
+                low2_cost = min(max(cif_price, low_cost), low2_cost)
 
-                    low2_cost = low_cost # low_cost is now second lowest
+                if cif_price < low_cost # if the exporter price is lower than the current low price
 
-                    low_cost = cif_price # cif_price is the low price
+                    low_cost = cif_price # the low costs is that exporters price
                     
                     min_ex = ex # and the exporter is the one with the lowest price
-
-                else
-                    # if not one scnario to check is that the cif_price may be 
-                    # the second lowest price
-
-                    low2_cost = min(low2_cost, cif_price)
 
                 end
 
             end
 
             price_charged = min(min(d[im, min_ex] * p2const[min_ex, gd], low2_cost), markup * low_cost)
-           
-            m[im, min_ex] += price_charged^(1 - σ)
 
-            sum_price[im] += price_charged^(1 - σ)
+            m[im, min_ex] += (price_charged )^(one(σ) - σ)
+
+            sum_price[im] += (price_charged )^(one(σ) - σ)
 
             rec_low_price[im, gd] = price_charged
 
-            rec_cost[im, gd] = low_cost
+            # rec_cost[im, gd] = low_cost
 
         end
 

@@ -11,13 +11,8 @@ using OptimizationPRIMA
 using LinearAlgebra
 
 ################################################################
-# builds the EK dataset
 
-# dftrade, dfcntryfix, dflabor = make_ek_dataset()
-# # this one has the country numbers which allows for the construction of the 
-# # trade costs given the estimated fixed effects from the gravity regressiondf
-
-dftrade = DataFrame(CSV.File("./make-tradeshare-pricegap/tradeshare-df-2004.csv"))
+dftrade = DataFrame(CSV.File("./data/tradeshare-df-2004.csv"))
 
 dftrade[!,"trade"] = log.(dftrade[!,"norm_tradeshare"] )
 
@@ -60,19 +55,23 @@ make_technology!(grvdata, T, W, grv_params)
 
 trd_prm = trade_params(θ = grv_params.θ, d = d, S = exp.(grvdata.S), Ncntry = grv_params.Ncntry, N = grv_params.L)
 
-# @time πshares, foo = sim_trade_pattern_ek(exp.(grvdata.S), d, τ, grv_params.θ, 1.5);
+# # @time πshares, foo = sim_trade_pattern_ek(exp.(grvdata.S), d, τ, grv_params.θ, 1.5);
 
-πshares, foo = sim_trade_pattern_ek(trd_prm);
+# println("Simmulated trade pattern EK")
 
-# out1, out2 = generate_moments(trd_prm; code = 300)
+# πshares, foo = sim_trade_pattern_ek(trd_prm);
 
-@time out2 = generate_moments(trd_prm, 100; code = 300, Nprices = 1000)
+# beta_moment_model(foo, πshares)
 
-πshares, foo = sim_trade_pattern_bejk(trd_prm);
 
-out1, out2 = generate_moments(trd_prm; model = "bejk", code = 300)
+# println("Simmulated trade pattern BEJK")
 
-test = estimate_θ(4.0, grv_params, trd_prm, grvdata)
+# πshares_bejk, foo = sim_trade_pattern_bejk(trd_prm);
+
+# beta_moment_model(foo, πshares_bejk)
+
+
+# test = estimate_θ(4.0, grv_params, trd_prm, grvdata)
 
 # @time out2 = generate_moments(trd_prm, 100; code = 300, Nprices = 1000)
 
