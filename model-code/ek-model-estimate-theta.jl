@@ -64,14 +64,25 @@ trd_prm = trade_params(θ = grv_params.θ, d = d, S = exp.(grvdata.S), Ncntry = 
 
 πshares, foo = sim_trade_pattern_ek(trd_prm);
 
+dfmodel = make_trademodel_dataframe(πshares, grv_params)
+
+plot(log.(dfmodel.tradeshare), log.(dfmodel.tradedata), seriestype = :scatter, alpha = 0.75,
+    xlabel = "model",
+    ylabel = "data",
+    legend = false)
+
+
+################################################################
+################################################################
+
 # out1, out2 = generate_moments(trd_prm; code = 300)
 
-@time out2 = generate_moments(trd_prm, 100; code = 300, Nprices = 1000)
+# @time out2 = generate_moments(trd_prm, 100; code = 300, Nprices = 1000)
 
 
 p = SciMLBase.NullParameters()
 
-f(x, p) = norm(-5.60 - mean(estimate_θ(x[1], grv_params, trd_prm, grvdata)))
+f(x, p) = norm(-5.60 - mean(estimate_θ(x[1], grv_params, trd_prm, grvdata; model = "bejk")))
 # fix need to bring in the data moment here
 
 lb = [2.0,]

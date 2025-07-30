@@ -108,3 +108,16 @@ trd_prm = trade_params(θ = grv_params.θ, d = d, S = exp.(grvdata.S), Ncntry = 
 #     xlabel = "model",
 #     ylabel = "data",
 #     legend = false)
+
+#Todo list:
+```
+
+1) First run the gravity regression
+2) Take predicted trade flows and add error terms
+3) Run the gravity regression on the simmulated trade data
+4) Take paremters from 3) and simmulate the model (EK, BEJK, etc)
+5) Sample prices (maybe with measurement error)
+6) Compute moments
+7) Construct weighting matrix and J-stats? (neet do fill this in)
+
+```
