@@ -227,7 +227,8 @@ function build_dni(pricemat, gross_output, tradeshare)
 
         cntry = nrow(gross_output)
 
-        df = DataFrame(exporter = String[], importer=String[], Xni = Float64[], logXni = Float64[], dni=Float64[], τni=Float64[])
+        df = DataFrame(exporter = String[], importer=String[], Xni = Float64[], logXni = Float64[],
+         dni=Float64[], dni2=Float64[], dni3 = Float64[], τni = Float64[])
     
         # Log of price matrix
         log_p = log.(pricemat)
@@ -236,7 +237,15 @@ function build_dni(pricemat, gross_output, tradeshare)
         dni = zeros(cntry, cntry)
         τni = zeros(cntry, cntry)
         dni2 = zeros(cntry, cntry)
-    
+        dni3 = zeros(cntry, cntry)
+
+        c = size(log_p, 2)
+
+        println("Number of Prices: ", c)
+
+        s5p = Int(round.(0.75 .* c ))
+        e5p = Int(round.(0.85 .* c ))
+
         # Compute price differences
         for importer in 1:cntry
 
@@ -249,7 +258,10 @@ function build_dni(pricemat, gross_output, tradeshare)
     
                 # Take the max and second max
                 num = pdiff[h[end]]
-                num2 = pdiff[h[end - 1]]
+                num2 = pdiff[h[e5p]]
+                num3 = pdiff[h[s5p]]
+
+                # print(num)
     
                 # Compute the mean price difference
                 den = mean(pdiff)
@@ -257,12 +269,15 @@ function build_dni(pricemat, gross_output, tradeshare)
                 # Compute proxies for aggregate price differences
                 dni[exporter, importer] = num - den
                 dni2[exporter, importer] = num2 - den
+                dni3[exporter, importer] = num3 - den
                 τni[exporter, importer] = num
 
                 push!(df, (gross_output[exporter, "ISO_Code"], gross_output[importer, "ISO_Code"], 
                 tradeshare[exporter, importer] / tradeshare[exporter, exporter],
                 log(tradeshare[exporter, importer] / tradeshare[exporter, exporter]),
                 dni[exporter, importer],
+                dni2[exporter, importer],
+                dni3[exporter, importer],
                 τni[exporter, importer]))
             
             end

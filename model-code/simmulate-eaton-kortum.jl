@@ -3,6 +3,63 @@ using StatsBase
 ###############################################################
 ###############################################################
 
+function dni_moment_model(pricemat, πshares)
+        # Number of countries
+    Ncntry = size(πshares, 1)
+
+    # Log of price matrix
+    log_p = log.(pricemat)
+
+    dni = Array{Float64}(undef, Ncntry, Ncntry)
+    dni2 = Array{Float64}(undef, Ncntry, Ncntry)
+    dni3 = Array{Float64}(undef, Ncntry, Ncntry)
+
+    c = size(log_p, 2)
+
+    s5p = round.(0.75 .* c )
+    e5p = round.(0.85 .* c )
+
+        # Compute price differences
+    for importer in 1:Ncntry
+
+        for exporter in 1:Ncntry
+            # Compute the price difference
+            pdiff = log_p[importer, :] .- log_p[exporter, :]
+
+            # Sort the differences
+            h = sortperm(pdiff)
+
+            # Take the max
+            num = pdiff[h[end]]
+            num2 = pdiff[h[e5p]];
+            num3 = pdiff[h[s5p]];
+
+            # Compute the mean price difference
+            den = mean(pdiff)
+
+            # Compute proxies for aggregate price differences
+            dni[exporter, importer] = num - den
+            dni2[exporter, importer] = num2 - den
+            dni3[exporter, importer] = num3 - den
+
+            Xni[exporter, importer] = πshares[importer, exporter] / πshares[exporter, exporter]
+            # IMPORTANT the shares are fliped where row is always the importer and the column is the exporter
+            # so when we map into the Xni we need to flip the order of the indices
+
+
+        end
+
+    end
+        # Exclude zeros and diagonal entries
+    notzeros = (Xni .≈ 0.0) .| (Xni .≈ 1.0)
+
+    return log.(Xni[.!notzeros]), dni[.!notzeros], dni2[.!notzeros], dni3[.!notzeros] 
+
+end
+
+###############################################################
+###############################################################
+
 function beta_moment_model(pricemat, πshares)
     # Number of countries
     Ncntry = size(πshares, 1)

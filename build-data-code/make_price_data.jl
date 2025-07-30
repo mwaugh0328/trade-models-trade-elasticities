@@ -12,6 +12,9 @@ drop_30 = DataFrame(CSV.File("./build-data-code/drop_30.csv"))
 
 ###########################################################################################
 
+println("working on year 2011")
+println(" ")
+
 data_set = XLSX.readxlsx("./build-data-code/2011-price-data/clean_basic_headings_2011.xlsx")
 
 # Extract the sheet (replace "Sheet1" with the actual sheet name if needed)
@@ -44,6 +47,9 @@ CSV.write(outfile, df, header = true)  # Write the DataFrame to a CSV file
 
 ##########################################################################################
 ##########################################################################################
+
+println("working on year 2004")
+println(" ")
 
 mat_data = matread("./build-data-code/2004-price-data/estimation_mat_30_2014-version.mat")
 
