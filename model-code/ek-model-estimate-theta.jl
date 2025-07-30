@@ -82,7 +82,7 @@ plot(log.(dfmodel.tradeshare), log.(dfmodel.tradedata), seriestype = :scatter, a
 
 p = SciMLBase.NullParameters()
 
-f(x, p) = norm(-5.60 - mean(estimate_θ(x[1], grv_params, trd_prm, grvdata; model = "bejk")))
+f(x, p) = norm(-5.60 - mean(estimate_θ(x[1], grv_params, trd_prm, grvdata; model = "ek")))
 # fix need to bring in the data moment here
 
 lb = [2.0,]
@@ -92,7 +92,7 @@ ub = [10.0,]
 prob = OptimizationProblem(f, [4.5], p, lb = lb, ub = ub)
 
 # Solve the problem using BOBYQA with options
-sol = Optimization.solve(prob, BOBYQA())
+@time sol = Optimization.solve(prob, BOBYQA())
 
 
 
