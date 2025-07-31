@@ -88,7 +88,7 @@ trd_prm = trade_params(θ = grv_params.θ, σ = σ, d = d, S = exp.(grvdata.S), 
 
 p = SciMLBase.NullParameters()
 
-f(x, p) = estimate_θ_dni_exact(x[1], df.dni, grv_params, trd_prm, grvdata; model = "bejk", display = true, Nruns = 10)
+f(x, p) = estimate_θ_dni(x[1], df.dni, grv_params, trd_prm, grvdata; model = "ek", display = true, Nruns = 10)
 
 
 lb = [2.5,]

@@ -137,7 +137,49 @@ end
 ###############################################################
 ###############################################################
 
-function estimate_θ_dni_exact(θ, dni, gravity_parameters, trade_parameters, gravity_results; model = "ek", Nruns = 10, Nprices = 70, Ngoods = 100000, display = false)
+function estimate_θ_dni(θ, dni, dni2, gravity_parameters, trade_parameters, gravity_results; model = "ek", Nruns = 10, Nprices = 70, Ngoods = 100000, display = false)
+    # A function to estimate the θ parameter using the gravity equation and the EK model
+
+    # println(θ)
+
+    @unpack Ncntry = gravity_parameters
+
+    d = rescale_trade_cots(θ, gravity_parameters, gravity_results)
+
+    foo = trade_params(θ = θ, d = d, trade_parameters)
+
+    # println( mean(foo.d) )
+
+    sim_dni, sim_dni2 = generate_moments(foo, Nruns; model = model, method = "over", Nprices = Nprices, Ngoods = Ngoods) 
+
+    sim_dni = mean(sim_dni, dims = 2)
+
+    sim_dni2 = mean(sim_dni2, dims = 2)
+
+    data_moments = [dni dni2]
+    # print(size(data_moments))
+
+    model_moments = [sim_dni sim_dni2]
+
+    hθ = mean(  data_moments .- model_moments, dims = 1)
+    print(size(hθ))
+
+    zero_fun = hθ*hθ'
+
+    # print(data_moments[1:10])
+    print(hθ)
+
+    if display == true
+
+        println("Zero function: ", zero_fun, " Value of θ: ", θ)
+
+    end
+
+    return zero_fun
+
+end
+
+function estimate_θ_dni(θ, dni, gravity_parameters, trade_parameters, gravity_results; model = "ek", Nruns = 10, Nprices = 70, Ngoods = 100000, display = false)
     # A function to estimate the θ parameter using the gravity equation and the EK model
 
     # println(θ)
