@@ -13,11 +13,12 @@ function dni_moment_model(pricemat, πshares)
     dni = Array{Float64}(undef, Ncntry, Ncntry)
     dni2 = Array{Float64}(undef, Ncntry, Ncntry)
     dni3 = Array{Float64}(undef, Ncntry, Ncntry)
+    Xni = Array{Float64}(undef, Ncntry, Ncntry)
 
     c = size(log_p, 2)
 
-    s5p = round.(0.75 .* c )
-    e5p = round.(0.85 .* c )
+    s5p = Int(round.(0.75 .* c ))
+    e5p = Int(round.(0.85 .* c ))
 
         # Compute price differences
     for importer in 1:Ncntry
@@ -51,7 +52,8 @@ function dni_moment_model(pricemat, πshares)
 
     end
         # Exclude zeros and diagonal entries
-    notzeros = (Xni .≈ 0.0) .| (Xni .≈ 1.0)
+    # notzeros = (Xni .≈ 0.0) .| (Xni .≈ 1.0)
+    notzeros = (Xni .≈ 1.0)
 
     return log.(Xni[.!notzeros]), dni[.!notzeros], dni2[.!notzeros], dni3[.!notzeros] 
 
@@ -132,26 +134,82 @@ function estimate_θ(θ, gravity_parameters, trade_parameters, gravity_results; 
 
 end
 
+###############################################################
+###############################################################
 
+function estimate_θ_dni_exact(θ, dni, gravity_parameters, trade_parameters, gravity_results; model = "ek", Nruns = 10, Nprices = 70, Ngoods = 100000, display = false)
+    # A function to estimate the θ parameter using the gravity equation and the EK model
 
-function generate_moments(trade_parameters, Nruns; model = "ek", code = 1, Nprices = 70, Ngoods = 200000)
-    # multiple dispatch version of the generate_moments function to generate a bunch of betas
+    # println(θ)
 
-    β = Array{Float64}(undef, Nruns)
+    @unpack Ncntry = gravity_parameters
 
-    Threads.@threads for xxx = 1:Nruns
+    d = rescale_trade_cots(θ, gravity_parameters, gravity_results)
 
-        β[xxx] = generate_moments(trade_parameters; model = model, code = code + xxx, Nprices = Nprices, Ngoods = Ngoods)[2]
+    foo = trade_params(θ = θ, d = d, trade_parameters)
+
+    # println( mean(foo.d) )
+
+    sim_dni = mean( generate_moments(foo, Nruns; model = model, method = "exact", Nprices = Nprices, Ngoods = Ngoods) , dims = 2)
+    #average accross the different simmulations
+
+    hθ = mean( dni .- sim_dni, dims = 1)
+    #this is the average differnce accros n,i pairs
+
+    zero_fun = hθ'*hθ
+
+    if display == true
+
+        println("Zero function: ", zero_fun, " Value of θ: ", θ)
 
     end
 
-    return β
+    return zero_fun
+
+end
+
+
+function generate_moments(trade_parameters, Nruns; model = "ek", method = "exact", code = 1, Nprices = 70, Ngoods = 200000)
+    # multiple dispatch version of the generate_moments function to generate a bunch of betas
+
+    # β = Array{Float64}(undef, Nruns)
+
+    if method == "exact"
+
+        dni = Array{Float64}(undef, trade_parameters.Ncntry^2 - trade_parameters.Ncntry, Nruns)
+
+        Threads.@threads for xxx = 1:Nruns
+
+        dni[:, xxx] = generate_moments(trade_parameters; model = model, method = method, code = code + xxx, Nprices = Nprices, Ngoods = Ngoods)
+
+        end
+        
+        return dni
+
+    elseif method == "over"
+
+        dni = Array{Float64}(undef, trade_parameters.Ncntry^2 - trade_parameters.Ncntry, Nruns)
+
+        dni2 = Array{Float64}(undef, trade_parameters.Ncntry^2 - trade_parameters.Ncntry, Nruns)
+
+        Threads.@threads for xxx = 1:Nruns
+
+        dni[:, xxx], dni2[:, xxx] = generate_moments(trade_parameters; model = model, method = method, code = code + xxx, Nprices = Nprices, Ngoods = Ngoods)
+
+        end
+        
+        return dni, dni2
+
+    else
+         error("Please specify estimation method, over or exact'.")
+
+    end
 
 end
     
 
 
-function generate_moments(trade_parameters; model = "ek", code = 1, Nprices = 70, Ngoods = 100000)
+function generate_moments(trade_parameters; model = "ek", method = "over", code = 1, Nprices = 70, Ngoods = 100000)
     # A function to simmulate a pattern of trade and then generate a 
     # random sample of final goods prices, then compute the moments
 
@@ -178,9 +236,23 @@ function generate_moments(trade_parameters; model = "ek", code = 1, Nprices = 70
 
     # need to compute the moments of the sampled prices
 
-    β = beta_moment_model(pmat, πshares)
+    # β = beta_moment_model(pmat, πshares)
 
-    return pmat, β
+    if method == "exact"
+
+        dni = dni_moment_model(pmat, πshares)[2]
+
+        return dni
+
+    elseif method == "over"
+
+        ~, dni, dni2, ~ = dni_moment_model(pmat, πshares)
+
+        return dni, dni2
+
+    else
+        error("Please specify estimation method, over or exact'.")
+    end
 
 end
 
