@@ -137,7 +137,7 @@ end
 ###############################################################
 ###############################################################
 
-function estimate_θ_dni(θ, dni, dni2, gravity_parameters, trade_parameters, gravity_results; model = "ek", Nruns = 10, Nprices = 70, Ngoods = 100000, display = false)
+function estimate_θ_dni(θ, dni, dni2, dist, gravity_parameters, trade_parameters, gravity_results; model = "ek", Wmat = "optimal", Nruns = 10, Nprices = 70, Ngoods = 100000, display = false)
     # A function to estimate the θ parameter using the gravity equation and the EK model
 
     # println(θ)
@@ -156,18 +156,31 @@ function estimate_θ_dni(θ, dni, dni2, gravity_parameters, trade_parameters, gr
 
     sim_dni2 = mean(sim_dni2, dims = 2)
 
-    data_moments = [dni dni2]
-    # print(size(data_moments))
+    sim_cov = (sim_dni .- mean(sim_dni, dims = 1)) .* (log.(dist) .- mean(log.(dist)))
+    
+     model_moments = [sim_dni sim_dni2 sim_cov]
 
-    model_moments = [sim_dni sim_dni2]
+    data_cov =  (dni .- mean(dni, dims = 1)) .* (log.(dist) .- mean(log.(dist))) 
+
+    data_moments = [dni dni2 data_cov]
+    print(size(data_moments))
 
     hθ = mean(  data_moments .- model_moments, dims = 1)
-    print(size(hθ))
+    # print(size(hθ))
 
-    zero_fun = hθ*hθ'
+    if Wmat == "optimal"
+        # Compute the optimal weighting matrix
+        W = cov(data_moments .- model_moments)
 
-    # print(data_moments[1:10])
-    print(hθ)
+    else
+        # Use the identity matrix as the weighting matrix
+        W = I(3)
+    end
+
+    zero_fun = hθ*(W^-1)*hθ'
+
+    # println(hθ)
+    # println(size(W))
 
     if display == true
 
@@ -198,7 +211,7 @@ function estimate_θ_dni(θ, dni, gravity_parameters, trade_parameters, gravity_
     hθ = mean( dni .- sim_dni, dims = 1)
     #this is the average differnce accros n,i pairs
 
-    zero_fun = hθ'*hθ
+    zero_fun = hθ*hθ'
 
     if display == true
 
@@ -315,56 +328,106 @@ function rescale_trade_cots(θ, gravity_parameters, gravity_results)
 end
     
 
-###############################################################
-###############################################################
+function generate_simmulated_data(θ, tradedata, σν, gravity_parameters; model = "ek", code = 1, Nprices = 70, Ngoods = 100000)
+    # A function to simmulate a pattern of trade and then generate a
+    # random sample of final goods prices, then compute the moments
 
-function average_trade_pattern(S, d, θ, σ; Ngoods = 100000, Nruns = 30)
-    # Computes the trade shares when avergaged over diffrent simmulaitons
-    # of the trade pattern. The function returns the average trade shares.
+    @unpack Ncntry = gravity_parameters
 
-    πshares = zeros(size(d))    
+    grvity_results = gravity(tradedata, σν; code = code, trade_cost_type = "ek", display = false)
 
-    Threads.@threads for xxx = 1:Nruns
+    d = zeros(Ncntry,Ncntry)
+    T = zeros(Ncntry)
+    W = ones(Ncntry)
 
-        πshares = πshares .+ (1.0 / Nruns)*sim_trade_pattern_ek(S, d, θ, σ, Ngoods = Ngoods, code = xxx)[1]
+    make_trade_costs!(grvity_results, d, gravity_parameters)
 
+    make_technology!(grvity_results, T, W, gravity_parameters)
+
+    trade_parameters= trade_params(θ = θ, σ = 2.5, d = d, S = exp.(grvity_results.S), Ncntry = gravity_parameters.Ncntry, N = gravity_parameters.L)
+
+    πshares = Array{Float64}(undef, length(Ncntry), length(Ncntry))
+
+    prices = Array{Float64}(undef, length(Ncntry), Ngoods)
+
+    if model == "ek"
+        # println("this is the EK model")
+        πshares, prices = sim_trade_pattern_ek(trade_parameters; Ngoods = Ngoods, code = code)
+
+    elseif model == "bejk"
+        # print("this is the BEJK model")
+        πshares, prices = sim_trade_pattern_bejk(trade_parameters; Ngoods = Ngoods, code = code)
+    else
+        error("Model not recognized. Use 'ek' or 'bejk'.")
     end
+        
+    sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
 
-    return πshares
+    pmat = prices[:, sampled_prices]
+
+
+    ~, dni, dni2, ~ = dni_moment_model(pmat, πshares)
+
+    sim_df = DataFrame(dni = dni, dni2 = dni2)
+
+    return sim_df, trade_parameters, grvity_results
+
 
 end
 
-function average_trade_pattern(S, d, τ, θ, σ; Ngoods = 50000, Nruns = 5)
-    # Computes the trade shares when avergaged over diffrent simmulaitons
-    # of the trade pattern. The function returns the average trade shares.
 
-    πshares = Array{Float64}(undef, length(S), length(S), Nruns)
-    τ_revenue = Array{Float64}(undef, length(S), length(S), Nruns)
-    Φ = Array{Float64}(undef, length(S), Nruns)
 
-    avg_πshares = zeros(size(d))
-    avg_τ_revenue = zeros(size(S))
-    avg_Φ = zeros(size(S))
 
-    Threads.@threads for xxx = 1:Nruns
+###############################################################
+###############################################################
 
-       πshares[:,:, xxx], Φ[:,xxx], τ_revenue[:, :, xxx] = sim_trade_pattern_ek(S, d, θ, σ, Ngoods = Ngoods, code = xxx)
+# function average_trade_pattern(S, d, θ, σ; Ngoods = 100000, Nruns = 30)
+#     # Computes the trade shares when avergaged over diffrent simmulaitons
+#     # of the trade pattern. The function returns the average trade shares.
 
-    end
+#     πshares = zeros(size(d))    
 
-    for xxx = 1:Nruns
+#     Threads.@threads for xxx = 1:Nruns
 
-        avg_πshares = avg_πshares .+ (1.0 / Nruns)*πshares[:,:, xxx]
+#         πshares = πshares .+ (1.0 / Nruns)*sim_trade_pattern_ek(S, d, θ, σ, Ngoods = Ngoods, code = xxx)[1]
 
-        avg_τ_revenue = avg_τ_revenue .+ (1.0 / Nruns).*τ_revenue[:,:,xxx]
+#     end
 
-        avg_Φ = avg_Φ .+ (1.0 / Nruns).*Φ[:,xxx]
+#     return πshares
 
-    end
+# end
 
-    return avg_πshares, avg_τ_revenue, avg_Φ
+# function average_trade_pattern(S, d, τ, θ, σ; Ngoods = 50000, Nruns = 5)
+#     # Computes the trade shares when avergaged over diffrent simmulaitons
+#     # of the trade pattern. The function returns the average trade shares.
 
-end
+#     πshares = Array{Float64}(undef, length(S), length(S), Nruns)
+#     τ_revenue = Array{Float64}(undef, length(S), length(S), Nruns)
+#     Φ = Array{Float64}(undef, length(S), Nruns)
+
+#     avg_πshares = zeros(size(d))
+#     avg_τ_revenue = zeros(size(S))
+#     avg_Φ = zeros(size(S))
+
+#     Threads.@threads for xxx = 1:Nruns
+
+#        πshares[:,:, xxx], Φ[:,xxx], τ_revenue[:, :, xxx] = sim_trade_pattern_ek(S, d, θ, σ, Ngoods = Ngoods, code = xxx)
+
+#     end
+
+#     for xxx = 1:Nruns
+
+#         avg_πshares = avg_πshares .+ (1.0 / Nruns)*πshares[:,:, xxx]
+
+#         avg_τ_revenue = avg_τ_revenue .+ (1.0 / Nruns).*τ_revenue[:,:,xxx]
+
+#         avg_Φ = avg_Φ .+ (1.0 / Nruns).*Φ[:,xxx]
+
+#     end
+
+#     return avg_πshares, avg_τ_revenue, avg_Φ
+
+# end
 
 ###############################################################
 ###############################################################
@@ -392,7 +455,7 @@ function sim_trade_pattern_ek(S, d,  θ, σ; Ngoods = 100000, code = 1)
     
     Ncntry = length(S)
 
-    inv_Ngoods = 1.0 / Ngoods
+    inv_Ngoods = one(σ) / Ngoods
 
     ###############################################################
     # Draw productivities and and compute unit costs to produce each good in
@@ -459,10 +522,13 @@ function sim_trade_pattern_ek(S, d,  θ, σ; Ngoods = 100000, code = 1)
             # ###############################################################
 
             # Update trade matrix `m`
-            m[im, min_ex] += low_price^(1.0 - σ)  
 
+            # lp = low_price^(one(σ) - σ)
+
+            m[im, min_ex] += low_price^(one(σ) - σ)
             # Update sum price and record lowest price
-            sum_price[im] += low_price^(1.0 - σ) 
+
+            sum_price[im] += low_price^(one(σ) - σ)
 
             rec_low_price[im, gd] = low_price
         end
@@ -471,11 +537,11 @@ function sim_trade_pattern_ek(S, d,  θ, σ; Ngoods = 100000, code = 1)
 
     # Loop to calculate aggregate price index and the trade shares.
 
-    for im in 1:Ncntry
+    @inbounds for im in 1:Ncntry
 
         g_val = (sum_price[im] * inv_Ngoods)
 
-        for ex in 1:Ncntry
+        @inbounds for ex in 1:Ncntry
 
             m[im, ex] = inv_Ngoods*( m[im, ex] ) / g_val
 

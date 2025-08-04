@@ -1,6 +1,7 @@
 using FixedEffectModels
 using Parameters
 using DataFrames
+using Distributions
 
 struct gravity_results{T}
     dist_coef::Array{T} # distance bins
@@ -198,8 +199,6 @@ function make_trade_costs!(gravity_results, d, gravity_params; trade_cost_type =
 
 end
 
-
-
 ##########################################################################
 ##########################################################################
 
@@ -235,6 +234,9 @@ function gravity(tradedata; trade_cost_type = "ek", display = false)
             dffoo = DataFrame(source_effects = S, destination_effects = θm);
             println(dffoo)
 
+            error_variance = mean(outreg.residuals.^ 2)
+            println("Error variance: ", error_variance)
+
         end
 
     elseif trade_cost_type == "waugh"
@@ -259,6 +261,93 @@ function gravity(tradedata; trade_cost_type = "ek", display = false)
             println("Source and Exporter Effects (The S's and θex's)")
             dffoo = DataFrame(source_effects = S, exporter_effects = θm);
             println(dffoo)
+
+        end
+    end
+
+    return gravity_results(dist_bins, lang_coef, S, θm)
+
+end
+
+
+##########################################################################
+##########################################################################
+
+function gravity(tradedata, σν; code = 1, trade_cost_type = "ek", display = false)
+    #function to create simmulated gravity_results
+
+
+    # first run the regression
+    outregfoo = reg(tradedata, @formula(trade ~ fe(importer) + fe(exporter) +
+         bin375 + bin750 + bin1500 + bin3000 + bin6000 + binmax  + border), save = true, tol = 1e-10)
+
+    # then get the predicted values
+    predicted = predict(outregfoo, tradedata)
+
+    foo = deepcopy(tradedata)
+
+    d = Normal(0.0, sqrt(σν) )
+
+    # add errorterms to the predicted values
+
+    foo.sim_trade = predicted + rand(MersenneTwister(08182016 + code ), d, size(foo.trade))
+
+    outreg = reg(foo, @formula(sim_trade ~ fe(importer) + fe(exporter) +
+         bin375 + bin750 + bin1500 + bin3000 + bin6000 + binmax  + border), save = true, tol = 1e-10)
+
+    lang_coef = outreg.coef[7:end]
+
+    if trade_cost_type == "ek"
+
+        S, θm, dist_bins = eaton_kortum_trade_costs(outreg)
+
+        if display == true
+
+            println(outreg)
+            println(" ")
+
+            println("Compare to Table III (1762)")
+            println(" ")
+            println("Distance Effects")
+            dffoo = DataFrame(distance_effects = dist_bins);
+            println(dffoo)
+            println(" ")
+            println("Border etc. Effects")
+            dffoo = DataFrame(boder_lang_effects = lang_coef);
+            println(dffoo)
+            println(" ")
+            println("Source and Destination Effects (The S's and θm's)")
+            dffoo = DataFrame(source_effects = S, destination_effects = θm);
+            println(dffoo)
+
+            # error_variance = mean(outreg.residuals .^ 2)
+            # println("Error variance: ", error_variance)
+
+        end
+
+    elseif trade_cost_type == "waugh"
+
+        S, θm, dist_bins = waugh_trade_costs(outreg)
+
+        if display == true
+
+            println(outreg)
+            println(" ")
+
+            println("Waugh (2010) Formulation")
+            println(" ")
+            println("Distance Effects")
+            dffoo = DataFrame(distance_effects = dist_bins);
+            println(dffoo)
+            println(" ")
+            println("Border, language, Eupope, etc. Effects")
+            dffoo = DataFrame(boder_lang_effects = lang_coef);
+            println(dffoo)
+            println(" ")
+            println("Source and Exporter Effects (The S's and θex's)")
+            dffoo = DataFrame(source_effects = S, exporter_effects = θm);
+            println(dffoo)
+
 
         end
     end
