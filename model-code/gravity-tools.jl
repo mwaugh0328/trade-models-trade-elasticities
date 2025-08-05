@@ -8,6 +8,7 @@ struct gravity_results{T}
     lang_coef::Array{T} # border, language, ec, efta
     S::Array{T} # source technology part
     θm::Array{T} # asymetric part
+    σν::T # error variance
 end
 
 ##########################################################################
@@ -18,7 +19,6 @@ end
     θ::Float64 = 4.0
     L::Array{Float64} = ones(Ncntry)
     dfcntryfix::DataFrame = DataFrame(foo = ones(Ncntry))
-    dfdist::DataFrame = DataFrame(foo = ones(Ncntry))
 end
 
 ##########################################################################
@@ -235,8 +235,8 @@ function gravity(tradedata; trade_cost_type = "ek", display = false)
             dffoo = DataFrame(source_effects = S, destination_effects = θm);
             println(dffoo)
 
-            error_variance = mean(outreg.residuals.^ 2)
-            println("Error variance: ", error_variance)
+            σν = mean(outreg.residuals.^ 2)
+            println("Error variance: ", σν)
 
         end
 
@@ -266,7 +266,7 @@ function gravity(tradedata; trade_cost_type = "ek", display = false)
         end
     end
 
-    return gravity_results(dist_bins, lang_coef, S, θm)
+    return gravity_results(dist_bins, lang_coef, S, θm, σν)
 
 end
 
@@ -353,7 +353,7 @@ function gravity(tradedata, σν; code = 1, trade_cost_type = "ek", display = fa
         end
     end
 
-    return gravity_results(dist_bins, lang_coef, S, θm)
+    return gravity_results(dist_bins, lang_coef, S, θm, σν)
 
 end
 

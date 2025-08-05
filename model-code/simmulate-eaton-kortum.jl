@@ -134,8 +134,44 @@ function estimate_θ(θ, gravity_parameters, trade_parameters, gravity_results; 
 
 end
 
-###############################################################
-###############################################################
+##############################################################################################################################
+##############################################################################################################################
+
+function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
+            gravity_results; model = "ek", method = "exact", Wmat = "optimal", display = true, Nruns = 10)
+
+    lb = [2.5,]
+    ub = [10.0,]
+
+    p = SciMLBase.NullParameters()
+
+    f(x, p) = estimate_θ_dni(x[1], dfdni.dni, gravity_parameters, trade_parameters,
+            gravity_results; model = model, display = display, Nruns = Nruns)
+
+    g(x, p) = estimate_θ_dni(x[1], dfdni.dni, dfdni.dni2, dfdni.dist,  gravity_parameters, trade_parameters,
+            gravity_results; model = model, Wmat = Wmat, display = display, Nruns = Nruns)
+
+    if method == "exact"
+
+        # Define the function to estimate θ using the exact method
+
+            prob = OptimizationProblem(f, [4.5], p, lb = lb, ub = ub)
+
+    else
+                # Define the function to estimate θ using the over method
+            prob = OptimizationProblem(g, [4.5], p, lb = lb, ub = ub)
+        
+    end
+
+    sol = Optimization.solve(prob, BOBYQA(); rhoend = 1e-4)
+
+    return sol.x[1], length(dfdni.dni) * sol.objective
+
+end
+
+
+##############################################################################################################################
+##############################################################################################################################
 
 function estimate_θ_dni(θ, dni, dni2, dist, gravity_parameters, trade_parameters, gravity_results; model = "ek", Wmat = "optimal", Nruns = 10, Nprices = 70, Ngoods = 100000, display = false)
     # A function to estimate the θ parameter using the gravity equation and the EK model
@@ -163,7 +199,7 @@ function estimate_θ_dni(θ, dni, dni2, dist, gravity_parameters, trade_paramete
     data_cov =  (dni .- mean(dni, dims = 1)) .* (log.(dist) .- mean(log.(dist))) 
 
     data_moments = [dni dni2 data_cov]
-    print(size(data_moments))
+    # print(size(data_moments))
 
     hθ = mean(  data_moments .- model_moments, dims = 1)
     # print(size(hθ))
@@ -191,6 +227,8 @@ function estimate_θ_dni(θ, dni, dni2, dist, gravity_parameters, trade_paramete
     return zero_fun
 
 end
+
+##############################################################################################################################
 
 function estimate_θ_dni(θ, dni, gravity_parameters, trade_parameters, gravity_results; model = "ek", Nruns = 10, Nprices = 70, Ngoods = 100000, display = false)
     # A function to estimate the θ parameter using the gravity equation and the EK model
@@ -222,6 +260,8 @@ function estimate_θ_dni(θ, dni, gravity_parameters, trade_parameters, gravity_
     return zero_fun
 
 end
+
+##############################################################################################################################
 
 
 function generate_moments(trade_parameters, Nruns; model = "ek", method = "exact", code = 1, Nprices = 70, Ngoods = 200000)
@@ -261,8 +301,9 @@ function generate_moments(trade_parameters, Nruns; model = "ek", method = "exact
     end
 
 end
-    
 
+##############################################################################################################################
+##############################################################################################################################
 
 function generate_moments(trade_parameters; model = "ek", method = "over", code = 1, Nprices = 70, Ngoods = 100000)
     # A function to simmulate a pattern of trade and then generate a 
@@ -301,7 +342,7 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
 
     elseif method == "over"
 
-        ~, dni, dni2, ~ = dni_moment_model(pmat, πshares)
+        dni, dni2 = dni_moment_model(pmat, πshares)[2:3]
 
         return dni, dni2
 
@@ -310,8 +351,8 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
     end
 
 end
-
-
+##############################################################################################################################
+##############################################################################################################################
 
 function rescale_trade_cots(θ, gravity_parameters, gravity_results)
     
@@ -327,6 +368,8 @@ function rescale_trade_cots(θ, gravity_parameters, gravity_results)
 
 end
     
+##############################################################################################################################
+##############################################################################################################################
 
 function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model = "ek", code = 1, Nprices = 70, Ngoods = 100000)
     # A function to simmulate a pattern of trade and then generate a
@@ -374,26 +417,32 @@ function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model
 
 end
 
-function boot_strap_simulation(θ, σν, tradedata,  gravity_parameters; 
-    model = "ek", method = "exact", Wmat = "optimal", code = 1, Nprices = 70, Ngoods = 100000, Nruns = 10)
+##############################################################################################################################
+##############################################################################################################################
 
+function boot_strap_simulation(θ, σν, tradedata,  gravity_parameters; 
+    model = "ek", method = "exact", Wmat = "optimal", code = 1, Nprices = 70, Ngoods = 100000, Nboots = 100, Nruns  = 10)
+    # A function to run a boot strap simulation to get the distribution of the θ estimator
+    # the function returns the θ estimates and the value of the J-Stats
+    
     lb = [2.5,]
     ub = [10.0,]
 
     p = SciMLBase.NullParameters()
 
-    θval = Array{Float64}(undef, Nruns)
+    θval = Array{Float64}(undef, Nboots)
+    Jval = Array{Float64}(undef, Nboots)
 
-    for xxx = 1:Nruns
+    for xxx = 1:Nboots
 
         sim_df, trade_parameters, gravity_results = generate_simmulated_data(θ, σν, tradedata, gravity_parameters; 
                 model = model, code = code + xxx, Nprices = Nprices, Ngoods = Ngoods)
 
         f(x, p) = estimate_θ_dni(x[1], sim_df.dni, gravity_parameters, trade_parameters,
-            gravity_results; model = model, display = true, Nruns = Nruns)
+            gravity_results; model = model, display = false, Nruns = Nruns )
 
         g(x, p) = estimate_θ_dni(x[1], sim_df.dni, sim_df.dni2, sim_df.dist,  gravity_parameters, trade_parameters,
-            gravity_results; model = model, Wmat = Wmat, display = true, Nruns = Nruns)
+            gravity_results; model = model, Wmat = Wmat, display = false, Nruns = Nruns )
 
         if method == "exact"
 
@@ -409,11 +458,14 @@ function boot_strap_simulation(θ, σν, tradedata,  gravity_parameters;
 
         sol = Optimization.solve(prob, BOBYQA(); rhoend = 1e-4)
 
-    θval[xxx] = sol.x[1]
+        θval[xxx] = sol.x[1]
+        Jval[xxx] = length(sim_df.dni) * sol.objective
+
+        println("Run: ", xxx, " θ: ", θval[xxx], " J-stat: ", Jval[xxx])
 
     end
 
-    return θval
+    return θval, Jval
 
 end
 
