@@ -86,18 +86,18 @@ trd_prm = trade_params(θ = grv_params.θ, σ = σ, d = d, S = exp.(grvdata.S), 
 # outreg = reg(df, @formula(dni ~ fe(importer) + fe(exporter) + border + log(dist)), save = true, tol = 1e-10)
 
 
-estimate_θ_dni(4.0, df.dni, df.dni2, df.dist, grv_params, trd_prm, grvdata; model = "ek", display = true, Nruns = 10)
+# estimate_θ_dni(4.0, df.dni, df.dni2, df.dist, grv_params, trd_prm, grvdata; model = "ek", display = true, Nruns = 10)
 
 
-p = SciMLBase.NullParameters()
+# p = SciMLBase.NullParameters()
 
-f(x, p) = estimate_θ_dni(x[1], df.dni, df.dni2, df.dist,  grv_params, trd_prm, grvdata; model = "bejk", Wmat = "optimal", display = true, Nruns = 40)
+# f(x, p) = estimate_θ_dni(x[1], df.dni, df.dni2, df.dist,  grv_params, trd_prm, grvdata; model = "bejk", Wmat = "optimal", display = true, Nruns = 40)
 
-lb = [2.5,]
-ub = [10.0,]
+# lb = [2.5,]
+# ub = [10.0,]
 
-# Define the optimization problem
-prob = OptimizationProblem(f, [4.5], p, lb = lb, ub = ub)
+# # Define the optimization problem
+# prob = OptimizationProblem(f, [4.5], p, lb = lb, ub = ub)
 
-# Solve the problem using BOBYQA with options
-@time sol = Optimization.solve(prob, BOBYQA(); rhoend = 1e-4)
+# # Solve the problem using BOBYQA with options
+# @time sol = Optimization.solve(prob, BOBYQA(); rhoend = 1e-4)

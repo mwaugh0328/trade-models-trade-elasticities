@@ -138,7 +138,7 @@ end
 ##############################################################################################################################
 
 function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
-            gravity_results; model = "ek", method = "exact", Wmat = "optimal", display = true, Nruns = 10)
+            gravity_results; model = "ek", method = "exact", Wmat = "optimal", display = true, Nruns = 10, Ngoods = 100000)
 
     lb = [2.5,]
     ub = [10.0,]
@@ -146,10 +146,10 @@ function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
     p = SciMLBase.NullParameters()
 
     f(x, p) = estimate_θ_dni(x[1], dfdni.dni, gravity_parameters, trade_parameters,
-            gravity_results; model = model, display = display, Nruns = Nruns)
+            gravity_results; model = model, display = display, Nruns = Nruns, Ngoods = Ngoods)
 
     g(x, p) = estimate_θ_dni(x[1], dfdni.dni, dfdni.dni2, dfdni.dist,  gravity_parameters, trade_parameters,
-            gravity_results; model = model, Wmat = Wmat, display = display, Nruns = Nruns)
+            gravity_results; model = model, Wmat = Wmat, display = display, Nruns = Nruns, Ngoods = Ngoods)
 
     if method == "exact"
 
@@ -322,9 +322,17 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
     elseif model == "bejk"
         # print("this is the BEJK model")
         πshares, prices = sim_trade_pattern_bejk(trade_parameters; Ngoods = Ngoods, code = code)
+
+    elseif model == "krugman"
+        # print("this is the Krugman model")
+        πshares, prices = sim_trade_pattern_krugman(trade_parameters; Ngoods = Ngoods, code = code)
+        
+
     else
-        error("Model not recognized. Use 'ek' or 'bejk'.")
+        error("Model not recognized. Use 'ek' or 'bejk' or 'krugman'.")
     end
+
+    # print(size(prices))
         
     sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
 
@@ -400,8 +408,13 @@ function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model
     elseif model == "bejk"
         # print("this is the BEJK model")
         πshares, prices = sim_trade_pattern_bejk(trade_parameters; Ngoods = Ngoods, code = code)
+
+    elseif model == "krugman"
+        # print("this is the Krugman model")
+        πshares, prices = sim_trade_pattern_krugman(trade_parameters; Ngoods = Ngoods, code = code)
+
     else
-        error("Model not recognized. Use 'ek' or 'bejk'.")
+        error("Model not recognized. Use 'ek' or 'bejk or krugman")
     end
         
     sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
@@ -819,6 +832,85 @@ function sim_trade_pattern_bejk(S, d, θ, σ; Ngoods = 100000, code = 1)
 
 end
 
+##############################################################################################################################
+##############################################################################################################################
 
+function sim_trade_pattern_krugman(trade_parameters; Ngoods = 10000, code = 1)
+    # multiple dispatch version of the sim_trade_pattern_krugman function
 
+    return sim_trade_pattern_krugman(trade_parameters.S, trade_parameters.d,  trade_parameters.θ; Ngoods = Ngoods, code = code)
 
+end
+
+function sim_trade_pattern_krugman(S, d, θ; Ngoods = 10, code = 1)
+
+    Ncntry = length(S)
+
+    η = θ + 1
+    markup = η / (η - 1)
+
+    m = zeros(Ncntry, Ncntry)
+
+    p_index = zeros(Ncntry)
+
+    price_matrix = zeros(Ncntry, Ngoods)
+
+    final_price = zeros(Ncntry, Ncntry * Ngoods)
+
+    u = fill(0.5, Ngoods)
+
+    # Assign values in the price matrix
+    @inbounds @views Threads.@threads for j in 1:Ncntry
+
+        price_matrix[j, :] .= markup .* marginal_cost.(u, S[j], θ) 
+        
+    end
+
+    # print(marginal_cost.(u, S[1], θ) )
+
+    @inbounds  for im in 1:Ncntry
+
+        carry_prices = zeros(Ncntry, Ngoods)
+        
+        for ex in 1:Ncntry
+            
+            if ex == im
+
+                @views carry_prices[im, :] .= price_matrix[im, :]
+
+                continue
+            
+            end
+
+            @views carry_prices[ex, :] .= d[im, ex] .* price_matrix[ex, :]
+        end
+
+        flow = carry_prices .!= 0
+        
+        num_parts = zeros(Ncntry)
+        
+        for ex in 1:Ncntry
+            
+            @views idx = flow[ex, :] .== 1
+
+            num_parts[ex] = sum(carry_prices[ex, idx].^(1 - η))
+
+        end
+
+        p_index[im] = (sum(num_parts))^(-one(η) / (η - one(η) ))
+
+        m[im, :] = num_parts ./ (p_index[im])^(one(η) - η)
+
+        final_price[im, :] = vec(carry_prices)
+        # basicly this whole vector now reflects all the prices for each variety
+    end
+
+    sampled_prices= sample(MersenneTwister(09111943 + code), 1:(Ncntry * Ngoods), Ngoods; replace=false)
+
+    rec_low_price = final_price[:, sampled_prices]
+
+    return m, rec_low_price
+
+end
+
+##############################################################################################################################
