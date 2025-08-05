@@ -18,6 +18,7 @@ end
     θ::Float64 = 4.0
     L::Array{Float64} = ones(Ncntry)
     dfcntryfix::DataFrame = DataFrame(foo = ones(Ncntry))
+    dfdist::DataFrame = DataFrame(foo = ones(Ncntry))
 end
 
 ##########################################################################

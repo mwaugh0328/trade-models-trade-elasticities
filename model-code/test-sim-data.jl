@@ -52,11 +52,14 @@ L = ones(Ncntry)
 
 grv_params = gravity_params(Ncntry = Ncntry, θ = θ, L = L, dfcntryfix = dfcountryfix )
 
-dfsim, trd_prm, grvdata = generate_simmulated_data(4.0, dftrade, 0.36, grv_params; model = "ek", code = 100)
+dfsim, trd_prm, grvdata = generate_simmulated_data(4.0, 0.36, dftrade, grv_params; model = "ek", code = 100)
+
+# estθ = boot_strap_simulation(4.0, 0.36, dftrade, grv_params; 
+#     model = "ek", method = "exact", code = 100)
 
 p = SciMLBase.NullParameters()
 
-f(x, p) = estimate_θ_dni(x[1], dfsim.dni, dfsim.dni2, df.dist,  grv_params, trd_prm,
+f(x, p) = estimate_θ_dni(x[1], dfsim.dni, dfsim.dni2, dfsim.dist,  grv_params, trd_prm,
  grvdata; model = "ek", Wmat = "optimal", display = true, Nruns = 10)
 
 lb = [2.5,]

@@ -328,7 +328,7 @@ function rescale_trade_cots(θ, gravity_parameters, gravity_results)
 end
     
 
-function generate_simmulated_data(θ, tradedata, σν, gravity_parameters; model = "ek", code = 1, Nprices = 70, Ngoods = 100000)
+function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model = "ek", code = 1, Nprices = 70, Ngoods = 100000)
     # A function to simmulate a pattern of trade and then generate a
     # random sample of final goods prices, then compute the moments
 
@@ -365,17 +365,57 @@ function generate_simmulated_data(θ, tradedata, σν, gravity_parameters; model
 
     pmat = prices[:, sampled_prices]
 
+    dni, dni2 = dni_moment_model(pmat, πshares)[2:3]
 
-    ~, dni, dni2, ~ = dni_moment_model(pmat, πshares)
-
-    sim_df = DataFrame(dni = dni, dni2 = dni2)
+    sim_df = DataFrame(dni = dni, dni2 = dni2, dist = gravity_parameters.dfcntryfix.dist)
 
     return sim_df, trade_parameters, grvity_results
 
 
 end
 
+function boot_strap_simulation(θ, σν, tradedata,  gravity_parameters; 
+    model = "ek", method = "exact", Wmat = "optimal", code = 1, Nprices = 70, Ngoods = 100000, Nruns = 10)
 
+    lb = [2.5,]
+    ub = [10.0,]
+
+    p = SciMLBase.NullParameters()
+
+    θval = Array{Float64}(undef, Nruns)
+
+    for xxx = 1:Nruns
+
+        sim_df, trade_parameters, gravity_results = generate_simmulated_data(θ, σν, tradedata, gravity_parameters; 
+                model = model, code = code + xxx, Nprices = Nprices, Ngoods = Ngoods)
+
+        f(x, p) = estimate_θ_dni(x[1], sim_df.dni, gravity_parameters, trade_parameters,
+            gravity_results; model = model, display = true, Nruns = Nruns)
+
+        g(x, p) = estimate_θ_dni(x[1], sim_df.dni, sim_df.dni2, sim_df.dist,  gravity_parameters, trade_parameters,
+            gravity_results; model = model, Wmat = Wmat, display = true, Nruns = Nruns)
+
+        if method == "exact"
+
+            # Define the function to estimate θ using the exact method
+
+            prob = OptimizationProblem(f, [4.5], p, lb = lb, ub = ub)
+
+        else
+                # Define the function to estimate θ using the over method
+            prob = OptimizationProblem(g, [4.5], p, lb = lb, ub = ub)
+        
+        end
+
+        sol = Optimization.solve(prob, BOBYQA(); rhoend = 1e-4)
+
+    θval[xxx] = sol.x[1]
+
+    end
+
+    return θval
+
+end
 
 
 ###############################################################
