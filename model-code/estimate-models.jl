@@ -1,4 +1,4 @@
-function estimate_all(years, model, method, Nruns, Nboots, directory)
+function estimate_all(years, model, method, Nruns, Nboots, directory; Ngoods = 100000)
 
     dfout = DataFrame()
 
@@ -71,7 +71,7 @@ function estimate_all(years, model, method, Nruns, Nboots, directory)
     # # # Now simmulate the EK model
 
         θest, Jstat =  estimate_θ_dni(df, grv_params, trd_prm,  grvdata; 
-            model = model, method = method, Wmat = "optimal", display = false, Nruns = Nruns)
+            model = model, method = method, Wmat = "optimal", display = false, Nruns = Nruns, Ngoods = Ngoods)
 
 
         println("Year: ", yyy)
@@ -80,7 +80,7 @@ function estimate_all(years, model, method, Nruns, Nboots, directory)
         println(" ")
 
         θinterval, Jinterval = boot_strap_simulation(θest, grvdata.σν, dftrade, grv_params; 
-            model = model, method = method, code = 269, Nboots = Nboots, Nruns = Nruns)
+            model = model, method = method, code = 269, Nboots = Nboots, Nruns = Nruns, Ngoods = Ngoods)
 
         p90 = quantile(θinterval, 0.9)
         p10 = quantile(θinterval, 0.10)
