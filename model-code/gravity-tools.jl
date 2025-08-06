@@ -212,6 +212,8 @@ function gravity(tradedata; trade_cost_type = "ek", display = false)
 
     lang_coef = outreg.coef[7:end]
 
+    σν = mean(outreg.residuals.^ 2)
+
     if trade_cost_type == "ek"
 
         S, θm, dist_bins = eaton_kortum_trade_costs(outreg)
@@ -235,7 +237,7 @@ function gravity(tradedata; trade_cost_type = "ek", display = false)
             dffoo = DataFrame(source_effects = S, destination_effects = θm);
             println(dffoo)
 
-            σν = mean(outreg.residuals.^ 2)
+            
             println("Error variance: ", σν)
 
         end

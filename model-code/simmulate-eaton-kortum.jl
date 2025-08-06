@@ -383,11 +383,13 @@ function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model
     T = zeros(Ncntry)
     W = ones(Ncntry)
 
-    make_trade_costs!(grvity_results, d, gravity_parameters)
+    foo_gravity_parameters = gravity_params(θ = θ, gravity_parameters)
 
-    make_technology!(grvity_results, T, W, gravity_parameters)
+    make_trade_costs!(grvity_results, d, foo_gravity_parameters)
 
-    trade_parameters= trade_params(θ = θ, σ = 2.5, d = d, S = exp.(grvity_results.S), Ncntry = gravity_parameters.Ncntry, N = gravity_parameters.L)
+    make_technology!(grvity_results, T, W, foo_gravity_parameters)
+
+    trade_parameters= trade_params(θ = θ, σ = 2.5, d = d, S = exp.(grvity_results.S), Ncntry = foo_gravity_parameters.Ncntry, N = foo_gravity_parameters.L)
 
     πshares = Array{Float64}(undef, length(Ncntry), length(Ncntry))
 
