@@ -916,3 +916,112 @@ function sim_trade_pattern_krugman(S, d, θ; Ngoods = 10, code = 1)
 end
 
 ##############################################################################################################################
+
+function sim_trade_pattern_melitz(S, d, θ; Ngoods = 10000, code = 1)
+
+    #IMPORTANT need to check how S is enterd
+
+    Ncntry = length(S)
+    
+    η = θ + 1
+
+    markup = η / (η - 1)    
+
+    # rng = MersenneTwister(03281978 + code)
+
+    pi_nn = zeros(Ncntry)
+
+    cost_cutoff = zeros(Ncntry)
+
+    for j in 1:Ncntry
+        
+        phi_sum = sum(S .* d[j, :].^(-θ))
+
+        pi_nn[j] = S[j] / phi_sum
+        
+        cost_cutoff[j] = (pi_nn[j] / S[j])^(1 / θ)
+    end
+
+    max_goods = maximum(pi_nn)
+
+    m = zeros(Ncntry, Ncntry)
+
+    p_index = zeros(Ncntry)
+    
+    price_matrix = zeros(Ncntry, Ngoods)
+
+    u = Array{Float64}(undef, Ncntry, Ngoods)
+
+    rand!(MersenneTwister(03281978 + code ), u)
+
+    # Assign values in the price matrix
+    for j in 1:Ncntry
+
+        cgoods = round(Int, Ngoods * (pi_nn[j] / max_goods))
+
+        u = Array{Float64}(undef, cgoods)
+
+        rand!(MersenneTwister(03281978 + code + j), u)
+
+        u = pi_nn[j] .* u
+
+        price_matrix[ j , 1:cgoods] .= markup .* (u ./ S[j]).^(1 / θ)
+        # Optionally shuffle: price_matrix[:, jjj] = price_matrix[shuffle(rng, 1:Ngoods), jjj]
+    end
+
+    final_price = Array{Float64}(undef, Ncntry, Ncntry * Ngoods)
+
+    # Compute exporting decisions and trade shares
+    for im in 1:Ncntry
+        
+        carry_prices = zeros(Ncntry, Ngoods)
+
+        for ex in 1:Ncntry
+            
+            if ex == im
+                carry_prices[im, :] .= price_matrix[im, :]
+                continue
+            end
+            pth = d[im, ex] .* price_matrix[ex, :] .<= markup * cost_cutoff[im]
+
+            carry_prices[ex, pth] .= d[im, ex] .* price_matrix[ex, pth]
+
+        end
+
+        flow = carry_prices .!= 0
+
+        num_parts = zeros(Ncntry)
+        
+        for ex in 1:Ncntry
+        
+            idx = flow[ex, :]
+
+            num_parts[ex] = sum(carry_prices[ex, idx].^(one(η) - η))
+
+        end
+
+        p_index[im] = (sum(num_parts))^(-one(η) / (η - one(η) ))
+
+        m[im, :] = num_parts ./ (p_index[im])^(one(η) - η)
+        
+        # Set zeros to NaN for filtering
+        carry_prices[carry_prices .== 0.0] .= NaN
+
+        # println(size(vec(carry_prices)))
+
+        # println(size(final_price[im, :]))
+
+
+        final_price[im, :] = vec(carry_prices)
+        # basicly this whole vector now reflects all the prices for each variety
+
+        final_price[im, :] = vec(carry_prices)
+    end
+
+    # Filter: keep only rows where all countries have a price (no NaN)
+    common_set = [all(.!isnan.(final_price[:, gd])) for gd in 1:size(final_price, 2)]
+
+    # final_price = final_price[:, common_set]
+
+    return m, final_price, common_set
+end

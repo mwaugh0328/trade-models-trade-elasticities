@@ -54,9 +54,9 @@ make_technology!(grvdata, T, W, grv_params)
 
 trd_prm = trade_params(θ = grv_params.θ, d = d, S = exp.(grvdata.S), Ncntry = grv_params.Ncntry, N = grv_params.L)
 
-# @time πshares, foo = sim_trade_pattern_krugman(trd_prm.S, d, grv_params.θ);
+@time πshares, foo = sim_trade_pattern_melitz(trd_prm.S, d, grv_params.θ; Ngoods=100000);
 
-@time πshares, foo = sim_trade_pattern_krugman(trd_prm);
+#@time πshares, foo = sim_trade_pattern_krugman(trd_prm);
 
 dfmodel = make_trademodel_dataframe(πshares, grv_params)
 
