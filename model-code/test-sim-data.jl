@@ -59,7 +59,7 @@ grv_params = gravity_params(Ncntry = Ncntry, θ = θ, L = L, dfcntryfix = dfcoun
 
 
 estimate_θ_dni(df, grv_params, trd_prm, 
-grvdata; model = "krugman", method = "exact", Wmat = "optimal", display = true, Ngoods = 10000, Nruns = 8)
+grvdata; model = "melitz", method = "exact", Wmat = "optimal", display = true, Ngoods = 10000, Nruns = 8)
 
             
 # p = SciMLBase.NullParameters()

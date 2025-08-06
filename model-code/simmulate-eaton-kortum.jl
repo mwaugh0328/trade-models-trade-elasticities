@@ -326,17 +326,34 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
     elseif model == "krugman"
         # print("this is the Krugman model")
         πshares, prices = sim_trade_pattern_krugman(trade_parameters; Ngoods = Ngoods, code = code)
-        
+
+    elseif model == "melitz"
+        # print("this is the Melitz model")
+        πshares, prices, common_set = sim_trade_pattern_melitz(trade_parameters; Ngoods = Ngoods, code = code)
+
+        num_prices = size(prices[:,common_set],2)
 
     else
         error("Model not recognized. Use 'ek' or 'bejk' or 'krugman'.")
     end
 
     # print(size(prices))
-        
-    sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
 
-    pmat = prices[:, sampled_prices]
+    if model != "melitz"
+        
+        sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
+
+        pmat = prices[:, sampled_prices]
+
+    elseif model == "melitz"
+
+        prices = prices[:,common_set]
+
+        sampled_prices= sample(MersenneTwister(09212013 + code), 1:num_prices, Nprices; replace=false)
+
+        pmat = prices[:, sampled_prices]
+
+    end
 
     # need to compute the moments of the sampled prices
 
@@ -889,7 +906,7 @@ function sim_trade_pattern_krugman(S, d, θ; Ngoods = 10, code = 1)
 
         end
 
-        @views final_price[im, :] = vec(carry_prices)
+        @views final_price[im, :] .= vec(carry_prices)
         # basicly this whole vector now reflects all the prices for each variety
     end
 
@@ -915,10 +932,17 @@ function sim_trade_pattern_krugman(S, d, θ; Ngoods = 10, code = 1)
 end
 
 ##############################################################################################################################
+##############################################################################################################################
+
+
+function sim_trade_pattern_melitz(trade_parameters; Ngoods = 10000, code = 1)
+    # multiple dispatch version of the sim_trade_pattern_krugman function
+
+    return sim_trade_pattern_melitz(trade_parameters.S, trade_parameters.d,  trade_parameters.θ; Ngoods = Ngoods, code = code)
+
+end
 
 function sim_trade_pattern_melitz(S, d, θ; Ngoods = 10000, code = 1)
-
-    #IMPORTANT need to check how S is enterd
 
     Ncntry = length(S)
     
@@ -945,13 +969,9 @@ function sim_trade_pattern_melitz(S, d, θ; Ngoods = 10000, code = 1)
 
     m = zeros(Ncntry, Ncntry)
 
-    p_index = zeros(Ncntry)
+    sum_price = zeros(Ncntry)
     
     price_matrix = zeros(Ncntry, Ngoods)
-
-    u = Array{Float64}(undef, Ncntry, Ngoods)
-
-    rand!(MersenneTwister(03281978 + code ), u)
 
     # Assign values in the price matrix
     for j in 1:Ncntry
@@ -971,51 +991,60 @@ function sim_trade_pattern_melitz(S, d, θ; Ngoods = 10000, code = 1)
     final_price = Array{Float64}(undef, Ncntry, Ncntry * Ngoods)
 
     # Compute exporting decisions and trade shares
-    for im in 1:Ncntry
-        
+
+    
+   @inbounds for im in 1:Ncntry
+
         carry_prices = zeros(Ncntry, Ngoods)
 
-        for ex in 1:Ncntry
+        @inbounds for gd in 1:Ngoods
+
+            @inbounds for ex in 1:Ncntry  
             
-            if ex == im
-                carry_prices[im, :] .= price_matrix[im, :]
-                continue
+                if ex == im
+
+                    carry_prices[ex, gd] = price_matrix[ex, gd]
+
+                
+                elseif d[im, ex] * price_matrix[ex, gd] <= markup * cost_cutoff[im]
+            
+
+                    carry_prices[ex, gd] = d[im, ex] * price_matrix[ex, gd]
+
+                end
+
+                if carry_prices[ex, gd] != 0.0
+                   
+                    m[im, ex] += carry_prices[ex, gd]^(one(η) - η)
+
+                    sum_price[im] += carry_prices[ex, gd]^(one(η) - η)
+
+                else
+                    carry_prices[ex, gd] = NaN
+
+                end
+
             end
-            pth = d[im, ex] .* price_matrix[ex, :] .<= markup * cost_cutoff[im]
-
-            carry_prices[ex, pth] .= d[im, ex] .* price_matrix[ex, pth]
-
         end
 
-        flow = carry_prices .!= 0
+        @views final_price[im, :] .= vec(carry_prices)
 
-        num_parts = zeros(Ncntry)
-        
-        for ex in 1:Ncntry
-        
-            idx = flow[ex, :]
-
-            num_parts[ex] = sum(carry_prices[ex, idx].^(one(η) - η))
-
-        end
-
-        p_index[im] = (sum(num_parts))^(-one(η) / (η - one(η) ))
-
-        m[im, :] = num_parts ./ (p_index[im])^(one(η) - η)
-        
-        # Set zeros to NaN for filtering
-        carry_prices[carry_prices .== 0.0] .= NaN
-
-        # println(size(vec(carry_prices)))
-
-        # println(size(final_price[im, :]))
-
-
-        final_price[im, :] = vec(carry_prices)
-        # basicly this whole vector now reflects all the prices for each variety
-
-        final_price[im, :] = vec(carry_prices)
     end
+
+    for im in 1:Ncntry
+
+        g_val = sum_price[im]
+
+        for ex in 1:Ncntry
+
+            m[im, ex] = ( m[im, ex] ) / g_val
+
+        end
+
+    end
+
+
+
 
     # Filter: keep only rows where all countries have a price (no NaN)
     common_set = [all(.!isnan.(final_price[:, gd])) for gd in 1:size(final_price, 2)]
