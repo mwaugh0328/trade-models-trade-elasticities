@@ -16,14 +16,15 @@ using LinearAlgebra
 year = ["2004", "2011", "2017"]
 model = "krugman"
 Nruns = 12
-Nboots = 10
+Nboots = 100
+Ngoods = 10000
 
 dirname = "./data/"
 
 ##############################################################################################################################
 method = "over"
 
-dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = 10000)
+dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
 
 CSV.write("./results/krugman-estimate-"*method*".csv", dfout; writeheader = true)
 
@@ -31,6 +32,6 @@ CSV.write("./results/krugman-estimate-"*method*".csv", dfout; writeheader = true
 
 method = "exact"
 
-dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = 10000)
+dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
 
 CSV.write("./results/krugman-estimate-"*method*".csv", dfout; writeheader = true)
