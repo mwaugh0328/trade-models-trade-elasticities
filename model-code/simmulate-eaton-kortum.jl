@@ -851,9 +851,9 @@ function sim_trade_pattern_krugman(S, d, θ; Ngoods = 10, code = 1)
     η = θ + 1
     markup = η / (η - 1)
 
-    m = zeros(Ncntry, Ncntry)
+    m = zeros(Ncntry, Ncntry) # need to be zero as I'm summing over stuff
 
-    p_index = zeros(Ncntry)
+    sum_price = zeros(Ncntry)
 
     price_matrix = zeros(Ncntry, Ngoods)
 
@@ -870,42 +870,41 @@ function sim_trade_pattern_krugman(S, d, θ; Ngoods = 10, code = 1)
 
     # print(marginal_cost.(u, S[1], θ) )
 
-    @inbounds  for im in 1:Ncntry
+    @inbounds for im in 1:Ncntry
 
         carry_prices = zeros(Ncntry, Ngoods)
-        
-        for ex in 1:Ncntry
-            
-            if ex == im
 
-                @views carry_prices[im, :] .= price_matrix[im, :]
+        @inbounds for gd in 1:Ngoods
 
-                continue
-            
+            # Loop over importing countries
+            @inbounds for ex in 1:Ncntry
+
+                carry_prices[ex, gd] = d[im, ex] * price_matrix[ex, gd]
+
+                m[im, ex] += carry_prices[ex, gd]^(one(η) - η)
+
+                sum_price[im] += carry_prices[ex, gd]^(one(η) - η)
+
             end
 
-            @views carry_prices[ex, :] .= d[im, ex] .* price_matrix[ex, :]
         end
 
-        flow = carry_prices .!= 0
-        
-        num_parts = zeros(Ncntry)
-        
-        for ex in 1:Ncntry
-            
-            @views idx = flow[ex, :] .== 1
-
-            num_parts[ex] = sum(carry_prices[ex, idx].^(1 - η))
-
-        end
-
-        p_index[im] = (sum(num_parts))^(-one(η) / (η - one(η) ))
-
-        m[im, :] = num_parts ./ (p_index[im])^(one(η) - η)
-
-        final_price[im, :] = vec(carry_prices)
+        @views final_price[im, :] = vec(carry_prices)
         # basicly this whole vector now reflects all the prices for each variety
     end
+
+     @inbounds for im in 1:Ncntry
+
+        g_val = sum_price[im]
+
+        @inbounds for ex in 1:Ncntry
+
+            m[im, ex] = ( m[im, ex] ) / g_val
+
+        end
+
+    end
+
 
     sampled_prices= sample(MersenneTwister(09111943 + code), 1:(Ncntry * Ngoods), Ngoods; replace=false)
 
