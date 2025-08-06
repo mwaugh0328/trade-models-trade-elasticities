@@ -70,7 +70,7 @@ function estimate_all(years, model, method, Nruns, Nboots, directory; Ngoods = 1
     # # ################################################################
     # # # Now simmulate the EK model
 
-        θest, Jstat =  estimate_θ_dni(df, grv_params, trd_prm,  grvdata; 
+        @time θest, Jstat =  estimate_θ_dni(df, grv_params, trd_prm,  grvdata; 
             model = model, method = method, Wmat = "optimal", display = false, Nruns = Nruns, Ngoods = Ngoods)
 
 

@@ -13,27 +13,24 @@ using OptimizationPRIMA
 using LinearAlgebra
 ################################################################
 
-
 year = ["2004", "2011", "2017"]
-
-# year = ["2004"]
-model = "ek"
+model = "melitz"
 Nruns = 12
-Nboots = 100
+Nboots = 10
 
 dirname = "./data/"
 
 ##############################################################################################################################
 method = "over"
 
-dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = 50000)
+dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = 10000)
 
-CSV.write("./results/ek-estimate-"*method*".csv", dfout; writeheader = true)
+CSV.write("./results/melitz-estimate-"*method*".csv", dfout; writeheader = true)
 
 ##############################################################################################################################
 
 method = "exact"
 
-dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = 50000)
+dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = 10000)
 
-CSV.write("./results/ek-estimate-"*method*".csv", dfout; writeheader = true)
+CSV.write("./results/melitz-estimate-"*method*".csv", dfout; writeheader = true)

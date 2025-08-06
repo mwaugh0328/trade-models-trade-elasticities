@@ -52,6 +52,24 @@ L = ones(Ncntry)
 
 grv_params = gravity_params(Ncntry = Ncntry, θ = θ, L = L, dfcntryfix = dfcountryfix )
 
+# ################################################################
+# # Run the Gravity regression
+
+grvdata = gravity(dftrade, display = false);
+
+# # ################################################################
+# # # Recover the trade costs and technology parameters
+
+d = zeros(Ncntry,Ncntry)
+T = zeros(Ncntry)
+W = ones(Ncntry)
+
+make_trade_costs!(grvdata, d, grv_params)
+
+make_technology!(grvdata, T, W, grv_params)
+
+trd_prm = trade_params(θ = grv_params.θ, σ = σ, d = d, S = exp.(grvdata.S), Ncntry = grv_params.Ncntry, N = grv_params.L)
+
 # dfsim, trd_prm, grvdata = generate_simmulated_data(4.0, 0.36, dftrade, grv_params; model = "ek", code = 100)
 
 # estθ = boot_strap_simulation(4.0, 0.36, dftrade, grv_params; 
@@ -59,7 +77,7 @@ grv_params = gravity_params(Ncntry = Ncntry, θ = θ, L = L, dfcntryfix = dfcoun
 
 
 estimate_θ_dni(df, grv_params, trd_prm, 
-grvdata; model = "melitz", method = "exact", Wmat = "optimal", display = true, Ngoods = 10000, Nruns = 8)
+grvdata; model = "krugman", method = "over", Wmat = "optimal", display = true, Ngoods = 10000, Nruns = 8)
 
             
 # p = SciMLBase.NullParameters()

@@ -432,13 +432,33 @@ function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model
         # print("this is the Krugman model")
         πshares, prices = sim_trade_pattern_krugman(trade_parameters; Ngoods = Ngoods, code = code)
 
-    else
-        error("Model not recognized. Use 'ek' or 'bejk or krugman")
-    end
-        
-    sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
+    elseif model == "melitz"
+        # print("this is the Melitz model")
+        πshares, prices, common_set = sim_trade_pattern_melitz(trade_parameters; Ngoods = Ngoods, code = code)
 
-    pmat = prices[:, sampled_prices]
+        num_prices = size(prices[:,common_set],2)
+
+    else
+        error("Model not recognized. Use 'ek' or 'bejk' or 'krugman'.")
+    end
+
+    # print(size(prices))
+
+    if model != "melitz"
+        
+        sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
+
+        pmat = prices[:, sampled_prices]
+
+    elseif model == "melitz"
+
+        prices = prices[:,common_set]
+
+        sampled_prices= sample(MersenneTwister(09212013 + code), 1:num_prices, Nprices; replace=false)
+
+        pmat = prices[:, sampled_prices]
+
+    end
 
     dni, dni2 = dni_moment_model(pmat, πshares)[2:3]
 
@@ -471,10 +491,10 @@ function boot_strap_simulation(θ, σν, tradedata,  gravity_parameters;
                 model = model, code = code + xxx, Nprices = Nprices, Ngoods = Ngoods)
 
         f(x, p) = estimate_θ_dni(x[1], sim_df.dni, gravity_parameters, trade_parameters,
-            gravity_results; model = model, display = false, Nruns = Nruns )
+            gravity_results; model = model, display = false, Ngoods = Ngoods, Nruns = Nruns )
 
         g(x, p) = estimate_θ_dni(x[1], sim_df.dni, sim_df.dni2, sim_df.dist,  gravity_parameters, trade_parameters,
-            gravity_results; model = model, Wmat = Wmat, display = false, Nruns = Nruns )
+            gravity_results; model = model, Wmat = Wmat, display = false, Ngoods = Ngoods, Nruns = Nruns )
 
         if method == "exact"
 
@@ -488,7 +508,7 @@ function boot_strap_simulation(θ, σν, tradedata,  gravity_parameters;
         
         end
 
-        sol = Optimization.solve(prob, BOBYQA(); rhoend = 1e-4)
+        @time sol = Optimization.solve(prob, BOBYQA(); rhoend = 1e-4)
 
         θval[xxx] = sol.x[1]
         Jval[xxx] = length(sim_df.dni) * sol.objective
