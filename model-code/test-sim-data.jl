@@ -77,7 +77,7 @@ trd_prm = trade_params(θ = grv_params.θ, σ = σ, d = d, S = exp.(grvdata.S), 
 
 
 estimate_θ_dni(df, grv_params, trd_prm, 
-grvdata; model = "ek", method = "over", Wmat = "optimal", display = true, Ngoods = 10000, Nruns = 8)
+grvdata; model = "melitz", method = "over", Wmat = "optimal", display = true, Ngoods = 10000, Nruns = 8)
 
             
 # p = SciMLBase.NullParameters()
