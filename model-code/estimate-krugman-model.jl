@@ -15,7 +15,7 @@ using LinearAlgebra
 
 year = ["2004", "2011", "2017"]
 model = "krugman"
-Nruns = 8
+Nruns = 12
 Nboots = 100
 Ngoods = 1000
 

@@ -336,7 +336,7 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
 
         common_set = falses(Ncntry * Ngoods)
 
-        πshares, prices, common_set = sim_trade_pattern_melitz(trade_parameters; Ngoods = Ngoods, code = code)
+        πshares, prices, common_set = sim_trade_pattern_melitz_optimized(trade_parameters; Ngoods = Ngoods, code = code)
 
         num_prices = size(prices[:,common_set],2)
 
@@ -445,7 +445,7 @@ function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model
 
         common_set = falses(Ncntry * Ngoods)
 
-        πshares, prices, common_set = sim_trade_pattern_melitz(trade_parameters; Ngoods = Ngoods, code = code)
+        πshares, prices, common_set = sim_trade_pattern_melitz_optimized(trade_parameters; Ngoods = Ngoods, code = code)
 
         num_prices = size(prices[:,common_set],2)
 
