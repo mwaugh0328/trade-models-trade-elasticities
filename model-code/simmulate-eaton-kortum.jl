@@ -165,7 +165,10 @@ function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
 
     sol = Optimization.solve(prob, BOBYQA(); rhoend = 1e-4)
 
-    return sol.x[1], length(dfdni.dni) * sol.objective
+    # Compatibility fix for different versions of Optimization.jl
+    solution_value = hasfield(typeof(sol), :u) ? sol.u[1] : sol.x[1]
+
+    return solution_value, length(dfdni.dni) * sol.objective
 
 end
 
@@ -518,7 +521,8 @@ function boot_strap_simulation(θ, σν, tradedata,  gravity_parameters;
 
         @time sol = Optimization.solve(prob, BOBYQA(); rhoend = 1e-4)
 
-        θval[xxx] = sol.x[1]
+        # Compatibility fix for different versions of Optimization.jl
+        θval[xxx] = hasfield(typeof(sol), :u) ? sol.u[1] : sol.x[1]
         Jval[xxx] = length(sim_df.dni) * sol.objective
 
         println("Run: ", xxx, " θ: ", θval[xxx], " J-stat: ", Jval[xxx])
