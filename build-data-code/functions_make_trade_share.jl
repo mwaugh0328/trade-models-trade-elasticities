@@ -302,7 +302,7 @@ function build_dni(pricemat, gross_output, tradeshare)
         cntry = nrow(gross_output)
 
         df = DataFrame(exporter = String[], importer=String[], Xni = Float64[], logXni = Float64[],
-         dni=Float64[], dni2=Float64[], dni3 = Float64[], τni = Float64[], tradevalue = Float64[])
+         dni=Float64[], dni2=Float64[], dni3 = Float64[], τni = Float64[])
     
         # Log of price matrix
         log_p = log.(pricemat)

@@ -39,7 +39,7 @@ gross_output = DataFrame(CSV.File(gross_output_file))
 
 tradeshare, tradeshare_df = construct_tradeshare(new_trade_mat, gross_output)
 
-df = build_dni(pricemat, gross_output, tradeshare, new_trade_mat)
+df = build_dni(pricemat, gross_output, tradeshare)
 
 outfile = "pricegap-df-2011.csv"
 
@@ -78,7 +78,7 @@ gross_output = DataFrame(CSV.File(gross_output_file))
 
 tradeshare, tradeshare_df = construct_tradeshare(new_trade_mat, gross_output)
 
-df = build_dni(pricemat, gross_output, tradeshare, new_trade_mat)
+df = build_dni(pricemat, gross_output, tradeshare)
 
 outfile = "pricegap-df-2004.csv"
 

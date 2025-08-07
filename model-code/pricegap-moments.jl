@@ -49,18 +49,22 @@ test = CorrelationTest(log.(pricegap_df.dist), pricegap_df.dni)
 println("Correlation of Price Gaps and Distance")
 println(test)
 
+test = CorrelationTest(pricegap_df.border, pricegap_df.dni)
+
+println("Correlation of Price Gaps and Border")
+println(test)
 
 ################################################################################################################
 
-outreg = reg(pricegap_df, @formula(dni ~ fe(importer) + fe(exporter) + border + log(dist)), save = true, tol = 1e-10)
+# outreg = reg(pricegap_df, @formula(dni ~ fe(importer) + fe(exporter) + border + log(dist)), save = true, tol = 1e-10)
 
-outreg = reg(pricegap_df, @formula(logXni ~ fe(importer) + fe(exporter) + border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
+# outreg = reg(pricegap_df, @formula(logXni ~ fe(importer) + fe(exporter) + border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
 
-print(outreg)
+# print(outreg)
 
-outreg = reg(pricegap_df, @formula(dni ~ fe(importer) + fe(exporter) + border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
+outreg = reg(pricegap_df, @formula((dni) ~ fe(importer) + fe(exporter) + border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
 
-println(outreg)
+# println(outreg)
 
 # results = compute_triplet_ratios(pricegap_df)
 
