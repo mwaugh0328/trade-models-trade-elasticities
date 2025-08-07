@@ -20,6 +20,12 @@ function estimate_all(years, model, method, Nruns, Nboots, directory; Ngoods = 1
 
         df = innerjoin(df, dfgrav, on = ["iso_o", "iso_d"])
 
+        dftariffs = DataFrame(CSV.File(directory*"tariffs-"*yyy*".csv"))
+
+        rename!(dftariffs, Dict("exporter" => "iso_o", "importer" => "iso_d"))
+
+        df = innerjoin(df, dftariffs, on = ["iso_o", "iso_d"])
+
         filter!(row -> ~(row.Xni ≈ 1.0), df);
 
         # filter!(row -> ~(row.Xni ≈ 0.0), df);
