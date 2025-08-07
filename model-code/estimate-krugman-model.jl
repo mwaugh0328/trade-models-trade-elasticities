@@ -15,9 +15,9 @@ using LinearAlgebra
 
 year = ["2004", "2011", "2017"]
 model = "krugman"
-Nruns = 12
+Nruns = 8
 Nboots = 100
-Ngoods = 10000
+Ngoods = 1000
 
 dirname = "./data/"
 
