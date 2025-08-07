@@ -329,6 +329,10 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
 
     elseif model == "melitz"
         # print("this is the Melitz model")
+        prices = Array{Float64}(undef, length(Ncntry), Ngoods*Ncntry)
+
+        common_set = falses(Ncntry * Ngoods)
+
         πshares, prices, common_set = sim_trade_pattern_melitz(trade_parameters; Ngoods = Ngoods, code = code)
 
         num_prices = size(prices[:,common_set],2)
@@ -434,6 +438,10 @@ function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model
 
     elseif model == "melitz"
         # print("this is the Melitz model")
+        prices = Array{Float64}(undef, length(Ncntry), Ngoods*Ncntry)
+
+        common_set = falses(Ncntry * Ngoods)
+
         πshares, prices, common_set = sim_trade_pattern_melitz(trade_parameters; Ngoods = Ngoods, code = code)
 
         num_prices = size(prices[:,common_set],2)
@@ -1010,6 +1018,8 @@ function sim_trade_pattern_melitz(S, d, θ; Ngoods = 10000, code = 1)
 
     final_price = Array{Float64}(undef, Ncntry, Ncntry * Ngoods)
 
+    common_set = falses(Ncntry * Ngoods)
+
     # Compute exporting decisions and trade shares
 
     
@@ -1064,12 +1074,15 @@ function sim_trade_pattern_melitz(S, d, θ; Ngoods = 10000, code = 1)
     end
 
 
-
-
     # Filter: keep only rows where all countries have a price (no NaN)
     common_set = [all(.!isnan.(final_price[:, gd])) for gd in 1:size(final_price, 2)]
 
     # final_price = final_price[:, common_set]
+
+    # sampled_prices= sample(MersenneTwister(09111943 + code), 1:(Ncntry * Ngoods), Ngoods; replace=false)
+
+    # rec_low_price = final_price[:, sampled_prices]
+    # sample_common_set = common_set[sampled_prices]
 
     return m, final_price, common_set
 end
