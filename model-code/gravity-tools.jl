@@ -678,3 +678,51 @@ function make_trademodel_dataframe(πshares, gravity_params)
 
     return df
 end
+
+function compute_triplet_ratios(df::DataFrame)
+    countries = unique(vcat(df.iso_o, df.iso_d))
+    results = DataFrame(
+        importer = String[],
+        exporter = String[],
+        third = String[],
+        lhs = Float64[],
+        rhs = Float64[]
+    )
+
+    # Helper to get value from df for a given importer/exporter
+    function getval(col, n, i)
+        row = findfirst(r -> r.iso_o == n && r.iso_d == i, eachrow(df))
+        isnothing(row) ? NaN : df[row, col]
+    end
+
+    for n in countries, i in countries, h in countries
+        if length(Set([n, i, h])) < 3
+            continue
+        end
+
+        X_ni = getval(:tradevalue, n, i)
+        X_ih = getval(:tradevalue, i, h)
+        X_hn = getval(:tradevalue, h, n)
+        X_nh = getval(:tradevalue, n, h)
+        X_hi = getval(:tradevalue, h, i)
+        X_in = getval(:tradevalue, i, n)
+
+        # Convert tariff to 1 + 0.01*tariff
+        τ_ni = 1.0 + 0.01 * getval(:tariff, n, i)
+        τ_ih = 1.0 + 0.01 * getval(:tariff, i, h)
+        τ_hn = 1.0 + 0.01 * getval(:tariff, h, n)
+        τ_in = 1.0 + 0.01 * getval(:tariff, i, n)
+        τ_hi = 1.0 + 0.01 * getval(:tariff, h, i)
+        τ_nh = 1.0 + 0.01 * getval(:tariff, n, h)
+
+        if any(isnan.([X_ni, X_ih, X_hn, X_nh, X_hi, X_in, τ_ni, τ_ih, τ_hn, τ_in, τ_hi, τ_nh]))
+            continue
+        end
+
+        lhs = (X_ni * X_ih * X_hn) / (X_nh * X_hi * X_in)
+        rhs = (τ_ni * τ_ih * τ_hn) / (τ_in * τ_hi * τ_nh)
+
+        push!(results, (n, i, h, lhs, rhs))
+    end
+    return results
+end

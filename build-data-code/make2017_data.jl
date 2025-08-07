@@ -22,6 +22,10 @@ tradedf = DataFrame(CSV.File(trade_file))
 
 tradeshare, tradeshare_df = construct_tradeshare_baci(tradedf, gross_output)
 
+outfile = "tradevalue-df-2017.csv"
+
+CSV.write(outfile, tradedf , header = true)  # Write the DataFrame to a CSV file
+
 ###########################################################################################
 
 rename!(tradeshare_df, Dict("exporter" => "iso_o", "importer" => "iso_d"))
@@ -42,6 +46,6 @@ pricemat = Matrix(pricedf[:, 2:end])
 
 df = build_dni(pricemat, gross_output, tradeshare)
 
-outfile = "pricegap-df-2017.csv"
+# outfile = "pricegap-df-2017.csv"
 
-CSV.write(outfile, df, header = true)  # Write the DataFrame to a CSV file
+# CSV.write(outfile, df, header = true)  # Write the DataFrame to a CSV file

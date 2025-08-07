@@ -29,7 +29,6 @@ rename!(dftariffs, Dict("exporter" => "iso_o", "importer" => "iso_d"))
 
 df = innerjoin(df, dftariffs, on = ["iso_o", "iso_d"])
 
-
 pricegap_df = innerjoin(df, dfgrav, on = ["iso_o", "iso_d"])
 
 filter!(row -> ~(row.Xni ≈ 1.0), pricegap_df);
@@ -38,7 +37,20 @@ filter!(row -> ~(row.Xni ≈ 0.0), pricegap_df);
 
 println( mean(pricegap_df.logXni) / mean(pricegap_df.dni) )
 
-# outreg = reg(pricegap_df, @formula(log(dist) ~ fe(importer) + fe(exporter) + dni), save = true, tol = 1e-10)
+################################################################################################################
+
+
+test = CorrelationTest(log.(1.0 .+ 0.01*pricegap_df.tariff ), pricegap_df.dni)
+println("Correlation of Price Gaps and Tariffs")
+println(test)
+
+test = CorrelationTest(log.(pricegap_df.dist), pricegap_df.dni)
+
+println("Correlation of Price Gaps and Distance")
+println(test)
+
+
+################################################################################################################
 
 outreg = reg(pricegap_df, @formula(dni ~ fe(importer) + fe(exporter) + border + log(dist)), save = true, tol = 1e-10)
 
@@ -49,3 +61,15 @@ print(outreg)
 outreg = reg(pricegap_df, @formula(dni ~ fe(importer) + fe(exporter) + border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
 
 println(outreg)
+
+# results = compute_triplet_ratios(pricegap_df)
+
+# clean_results = filter(row -> !isnan(row.lhs) && !isnan(row.rhs) && 
+#                             !isinf(row.lhs) && !isinf(row.rhs) && 
+#                             row.lhs > 0 && row.rhs > 0, results)
+
+
+# # # Run regression
+# reg_model = reg(clean_results, @formula(log(lhs) ~ log(rhs)))
+
+# println(reg_model)
