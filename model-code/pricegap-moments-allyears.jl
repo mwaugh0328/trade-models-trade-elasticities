@@ -5,13 +5,9 @@ using CSV
 using DataFrames
 using Plots
 using MINPACK
+ using HypothesisTests
 
 ################################################################
-# builds the EK dataset
-
-# dftrade, dfcntryfix, dflabor = make_ek_dataset()
-# # this one has the country numbers which allows for the construction of the 
-# # trade costs given the estimated fixed effects from the gravity regressiondf
 
 years = ["2004", "2011", "2017"]
 all_dfs = DataFrame[]
@@ -42,19 +38,40 @@ filter!(row -> ~(row.Xni ≈ 1.0), big_df)
 filter!(row -> ~(row.Xni ≈ 0.0), big_df)
 
 
-test = CorrelationTest(log.(1.0 .+ 0.01*big_df.tariff ), (big_df.dni))
-println("Correlation of Price Gaps and Tariffs")
-println(test)
+################################################################
 
 test = CorrelationTest(log.(big_df.dist), (big_df.dni))
 
+println(" ")
+println(" ")
+
 println("Correlation of Price Gaps and Distance")
 println(test)
+ci_90 = confint(test, 0.90)
+println("90% confidence interval: ", ci_90)
+
+
+################################################################
 
 test = CorrelationTest(big_df.border, (big_df.dni))
 
+println(" ")
+println(" ")
 println("Correlation of Price Gaps and Border")
 println(test)
+ci_90 = confint(test, 0.90)
+println("90% confidence interval: ", ci_90)
+
+################################################################
+test = CorrelationTest(log.(1.0 .+ 0.01*big_df.tariff ), (big_df.dni))
+println(" ")
+println(" ")
+println("Correlation of Price Gaps and Tariffs")
+println(test)
+ci_90 = confint(test, 0.90)
+println("90% confidence interval: ", ci_90)
+
+
 
 # outreg = reg(big_df, @formula(log(dni) ~  fe(year) + border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
 
