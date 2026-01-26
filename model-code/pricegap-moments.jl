@@ -13,7 +13,7 @@ using MINPACK
 # # this one has the country numbers which allows for the construction of the 
 # # trade costs given the estimated fixed effects from the gravity regressiondf
 
-year = "2011"
+year = "2017"
 
 df = DataFrame(CSV.File("./data/pricegap-df-"*year*".csv"))
 
@@ -64,7 +64,11 @@ println(test)
 
 outreg = reg(pricegap_df, @formula((dni) ~ fe(importer) + fe(exporter) + border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
 
-# println(outreg)
+println(outreg)
+
+outreg = reg(pricegap_df, @formula((dni) ~  border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
+
+println(outreg)
 
 # results = compute_triplet_ratios(pricegap_df)
 

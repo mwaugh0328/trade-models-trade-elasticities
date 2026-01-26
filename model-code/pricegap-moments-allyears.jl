@@ -73,9 +73,8 @@ println("90% confidence interval: ", ci_90)
 
 
 
-# outreg = reg(big_df, @formula(log(dni) ~  fe(year) + border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
-
+outreg = reg(big_df, @formula(log(dni) ~  fe(year) + border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
 
 # # Run regression with year fixed effect
 
-# println(outreg)
+println(outreg)

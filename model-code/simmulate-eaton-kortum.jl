@@ -137,6 +137,43 @@ end
 ##############################################################################################################################
 ##############################################################################################################################
 
+function estimate_θ_σ_dni(dfdni, gravity_parameters, trade_parameters,
+            gravity_results; model = "bejk", Wmat = "optimal", display = true, Nruns = 10, Ngoods = 100000)
+
+    if model != "bejk"
+        error("This function is only for the BEJK model")
+    end
+
+    lb = [2.5, 1.25]
+    ub = [10.0, 3.0]
+
+    p = SciMLBase.NullParameters()
+
+    g(x, p) = estimate_θ_σ_dni(x[1], x[2], dfdni.dni, dfdni.dni2, dfdni.dist,  gravity_parameters, trade_parameters,
+            gravity_results; model = model, Wmat = Wmat, display = display, return_moments = false, Nruns = Nruns, Ngoods = Ngoods)
+
+
+                # Define the function to estimate θ using the over method
+    prob = OptimizationProblem(g, [4.5, 1.35], p, lb = lb, ub = ub)
+        
+
+    sol = Optimization.solve(prob, BOBYQA(); rhoend = 1e-4)
+
+    # Compatibility fix for different versions of Optimization.jl
+    solution_value = hasfield(typeof(sol), :u) ? sol.u : sol.x
+
+
+    ~, data_moments, model_moments = estimate_θ_σ_dni(solution_value[1], solution_value[2], dfdni.dni, dfdni.dni2, dfdni.dist,  gravity_parameters, trade_parameters,
+             gravity_results; model = model, Wmat = Wmat, display = display, return_moments = true, Nruns = Nruns, Ngoods = Ngoods)
+
+
+    return solution_value, length(dfdni.dni) * sol.objective, model_moments, data_moments
+    #return solution_value
+end
+
+##############################################################################################################################
+##############################################################################################################################
+
 function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
             gravity_results; model = "ek", method = "exact", Wmat = "optimal", display = true, Nruns = 10, Ngoods = 100000)
 
@@ -146,10 +183,10 @@ function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
     p = SciMLBase.NullParameters()
 
     f(x, p) = estimate_θ_dni(x[1], dfdni.dni, gravity_parameters, trade_parameters,
-            gravity_results; model = model, display = display, Nruns = Nruns, Ngoods = Ngoods)
+            gravity_results; model = model, display = display, return_moments = false, Nruns = Nruns, Ngoods = Ngoods)
 
     g(x, p) = estimate_θ_dni(x[1], dfdni.dni, dfdni.dni2, dfdni.dist,  gravity_parameters, trade_parameters,
-            gravity_results; model = model, Wmat = Wmat, display = display, Nruns = Nruns, Ngoods = Ngoods)
+            gravity_results; model = model, Wmat = Wmat, display = display, return_moments = false, Nruns = Nruns, Ngoods = Ngoods)
 
     if method == "exact"
 
@@ -168,7 +205,23 @@ function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
     # Compatibility fix for different versions of Optimization.jl
     solution_value = hasfield(typeof(sol), :u) ? sol.u[1] : sol.x[1]
 
-    return solution_value, length(dfdni.dni) * sol.objective
+    if method == "exact"
+
+        ~, data_moments, model_moments = estimate_θ_dni(solution_value, dfdni.dni, gravity_parameters, trade_parameters,
+            gravity_results; model = model, display = display, return_moments = true, Nruns = Nruns, Ngoods = Ngoods)
+
+    else
+
+        ~, data_moments, model_moments = estimate_θ_dni(solution_value, dfdni.dni, dfdni.dni2, dfdni.dist,  gravity_parameters, trade_parameters,
+            gravity_results; model = model, Wmat = Wmat, display = display, return_moments = true, Nruns = Nruns, Ngoods = Ngoods)
+
+            
+
+    end
+
+
+
+    return solution_value, length(dfdni.dni) * sol.objective, model_moments, data_moments
 
 end
 
@@ -176,7 +229,76 @@ end
 ##############################################################################################################################
 ##############################################################################################################################
 
-function estimate_θ_dni(θ, dni, dni2, dist, gravity_parameters, trade_parameters, gravity_results; model = "ek", Wmat = "optimal", Nruns = 10, Nprices = 70, Ngoods = 100000, display = false)
+function estimate_θ_σ_dni(θ, σ, dni, dni2, dist, gravity_parameters, trade_parameters, gravity_results; model = "bejk", Wmat = "optimal",
+     Nruns = 10, Nprices = 70, Ngoods = 100000, display = false, return_moments = false)
+    # A function to estimate the θ and sigma paramter for the BEJK model
+
+    # println(θ)
+
+    @unpack Ncntry = gravity_parameters
+
+    d = rescale_trade_cots(θ, gravity_parameters, gravity_results)
+
+    foo = trade_params(θ = θ, σ = σ, d = d, trade_parameters)
+
+    # println( mean(foo.d) )
+
+    sim_dni, sim_dni2 = generate_moments(foo, Nruns; model = model, method = "over", Nprices = Nprices, Ngoods = Ngoods) 
+
+    sim_dni = mean(sim_dni, dims = 2)
+
+    sim_dni2 = mean(sim_dni2, dims = 2)
+
+    sim_cov = (sim_dni .- mean(sim_dni, dims = 1)) .* (log.(dist) .- mean(log.(dist)))
+    
+    model_moments = [sim_dni sim_dni2 sim_cov]
+    # println(mean(sim_cov))
+
+    data_cov =  (dni .- mean(dni, dims = 1)) .* (log.(dist) .- mean(log.(dist))) 
+
+    data_moments = [dni dni2 data_cov]
+    # println(mean(data_cov))
+    
+    hθ = mean(  data_moments .- model_moments, dims = 1)
+    # print(size(hθ))
+
+    if Wmat == "optimal"
+        # Compute the optimal weighting matrix
+        W = cov(data_moments .- model_moments)
+
+    else
+        # Use the identity matrix as the weighting matrix
+        W = I(3)
+    end
+
+    zero_fun = hθ*(W^-1)*hθ'
+
+    # println(hθ)
+    # println(size(W))
+
+    if display == true
+
+        println("Zero function: ", zero_fun, " Value of θ: ", θ, " Value of σ: ", σ)
+
+    end
+
+    if return_moments == true
+
+        return zero_fun, mean(data_moments, dims = 1), mean(model_moments, dims = 1)
+
+    else
+
+        return zero_fun
+
+    end
+
+end
+
+##############################################################################################################################
+##############################################################################################################################
+
+function estimate_θ_dni(θ, dni, dni2, dist, gravity_parameters, trade_parameters, gravity_results; model = "ek", Wmat = "optimal",
+     Nruns = 10, Nprices = 70, Ngoods = 100000, display = false, return_moments = false)
     # A function to estimate the θ parameter using the gravity equation and the EK model
 
     # println(θ)
@@ -197,13 +319,15 @@ function estimate_θ_dni(θ, dni, dni2, dist, gravity_parameters, trade_paramete
 
     sim_cov = (sim_dni .- mean(sim_dni, dims = 1)) .* (log.(dist) .- mean(log.(dist)))
     
-     model_moments = [sim_dni sim_dni2 sim_cov]
+    model_moments = [sim_dni sim_dni2 sim_cov]
+    # println(mean(sim_cov))
+
 
     data_cov =  (dni .- mean(dni, dims = 1)) .* (log.(dist) .- mean(log.(dist))) 
 
     data_moments = [dni dni2 data_cov]
-    # print(size(data_moments))
-
+    # println(mean(data_cov))
+    
     hθ = mean(  data_moments .- model_moments, dims = 1)
     # print(size(hθ))
 
@@ -227,14 +351,23 @@ function estimate_θ_dni(θ, dni, dni2, dist, gravity_parameters, trade_paramete
 
     end
 
-    return zero_fun
+    if return_moments == true
+
+        return zero_fun, mean(data_moments, dims = 1), mean(model_moments, dims = 1)
+
+    else
+
+        return zero_fun
+
+    end
 
 end
 
 ##############################################################################################################################
 
-function estimate_θ_dni(θ, dni, gravity_parameters, trade_parameters, gravity_results; model = "ek", Nruns = 10, Nprices = 70, Ngoods = 100000, display = false)
-    # A function to estimate the θ parameter using the gravity equation and the EK model
+function estimate_θ_dni(θ, dni, gravity_parameters, trade_parameters, gravity_results; model = "ek", 
+    Nruns = 10, Nprices = 70, Ngoods = 100000, display = false, return_moments = false)
+    # A function to estimate the θ parameter for the exactly identified case using the dni moment only
 
     # println(θ)
 
@@ -260,7 +393,15 @@ function estimate_θ_dni(θ, dni, gravity_parameters, trade_parameters, gravity_
 
     end
 
+    if return_moments == true
+
+        return zero_fun, mean(dni, dims = 1), mean(sim_dni, dims = 1)
+
+    else
+
     return zero_fun
+
+    end
 
 end
 
@@ -324,6 +465,7 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
 
     elseif model == "bejk"
         # print("this is the BEJK model")
+        #println("BEJK model with σ = ", trade_parameters.σ)
         πshares, prices = sim_trade_pattern_bejk(trade_parameters; Ngoods = Ngoods, code = code)
 
     elseif model == "krugman"
@@ -403,7 +545,7 @@ end
 ##############################################################################################################################
 ##############################################################################################################################
 
-function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model = "ek", code = 1, Nprices = 70, Ngoods = 100000)
+function generate_simmulated_data(θ, σν, tradedata, trade_parameters, gravity_parameters; model = "ek", code = 1, Nprices = 70, Ngoods = 100000)
     # A function to simmulate a pattern of trade and then generate a
     # random sample of final goods prices, then compute the moments
 
@@ -421,7 +563,7 @@ function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model
 
     make_technology!(grvity_results, T, W, foo_gravity_parameters)
 
-    trade_parameters= trade_params(θ = θ, σ = 2.5, d = d, S = exp.(grvity_results.S), Ncntry = foo_gravity_parameters.Ncntry, N = foo_gravity_parameters.L)
+    foo_trade_parameters= trade_params(θ = θ, σ = trade_parameters.σ, d = d, S = exp.(grvity_results.S), Ncntry = foo_gravity_parameters.Ncntry, N = foo_gravity_parameters.L)
 
     πshares = Array{Float64}(undef, length(Ncntry), length(Ncntry))
 
@@ -429,23 +571,23 @@ function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model
 
     if model == "ek"
         # println("this is the EK model")
-        πshares, prices = sim_trade_pattern_ek(trade_parameters; Ngoods = Ngoods, code = code)
+        πshares, prices = sim_trade_pattern_ek(foo_trade_parameters; Ngoods = Ngoods, code = code)
 
     elseif model == "bejk"
         # print("this is the BEJK model")
-        πshares, prices = sim_trade_pattern_bejk(trade_parameters; Ngoods = Ngoods, code = code)
+        println("BEJK model with σ = ", foo_trade_parameters.σ)
+        πshares, prices = sim_trade_pattern_bejk(foo_trade_parameters; Ngoods = Ngoods, code = code)
 
     elseif model == "krugman"
         # print("this is the Krugman model")
-        πshares, prices = sim_trade_pattern_krugman(trade_parameters; Ngoods = Ngoods, code = code)
-
+        πshares, prices = sim_trade_pattern_krugman(foo_trade_parameters; Ngoods = Ngoods, code = code)
     elseif model == "melitz"
         # print("this is the Melitz model")
         prices = Array{Float64}(undef, length(Ncntry), Ngoods*Ncntry)
 
         common_set = falses(Ncntry * Ngoods)
 
-        πshares, prices, common_set = sim_trade_pattern_melitz_optimized(trade_parameters; Ngoods = Ngoods, code = code)
+        πshares, prices, common_set = sim_trade_pattern_melitz_optimized(foo_trade_parameters; Ngoods = Ngoods, code = code)
 
         num_prices = size(prices[:,common_set],2)
 
@@ -475,7 +617,7 @@ function generate_simmulated_data(θ, σν, tradedata, gravity_parameters; model
 
     sim_df = DataFrame(dni = dni, dni2 = dni2, dist = gravity_parameters.dfcntryfix.dist)
 
-    return sim_df, trade_parameters, grvity_results
+    return sim_df, foo_trade_parameters, grvity_results
 
 
 end
@@ -483,7 +625,7 @@ end
 ##############################################################################################################################
 ##############################################################################################################################
 
-function boot_strap_simulation(θ, σν, tradedata,  gravity_parameters; 
+function boot_strap_simulation(θ, σν, tradedata, trade_parameters, gravity_parameters; 
     model = "ek", method = "exact", Wmat = "optimal", code = 1, Nprices = 70, Ngoods = 100000, Nboots = 100, Nruns  = 10)
     # A function to run a boot strap simulation to get the distribution of the θ estimator
     # the function returns the θ estimates and the value of the J-Stats
@@ -498,13 +640,13 @@ function boot_strap_simulation(θ, σν, tradedata,  gravity_parameters;
 
     for xxx = 1:Nboots
 
-        sim_df, trade_parameters, gravity_results = generate_simmulated_data(θ, σν, tradedata, gravity_parameters; 
+        sim_df, foo_trade_parameters, gravity_results = generate_simmulated_data(θ, σν, tradedata, trade_parameters, gravity_parameters; 
                 model = model, code = code + xxx, Nprices = Nprices, Ngoods = Ngoods)
 
-        f(x, p) = estimate_θ_dni(x[1], sim_df.dni, gravity_parameters, trade_parameters,
+        f(x, p) = estimate_θ_dni(x[1], sim_df.dni, gravity_parameters, foo_trade_parameters,
             gravity_results; model = model, display = false, Ngoods = Ngoods, Nruns = Nruns )
 
-        g(x, p) = estimate_θ_dni(x[1], sim_df.dni, sim_df.dni2, sim_df.dist,  gravity_parameters, trade_parameters,
+        g(x, p) = estimate_θ_dni(x[1], sim_df.dni, sim_df.dni2, sim_df.dist,  gravity_parameters, foo_trade_parameters,
             gravity_results; model = model, Wmat = Wmat, display = false, Ngoods = Ngoods, Nruns = Nruns )
 
         if method == "exact"
@@ -760,6 +902,8 @@ function sim_trade_pattern_bejk(S, d, θ, σ; Ngoods = 100000, code = 1)
     inv_Ngoods = 1 / Ngoods
 
     markup = σ / (σ - one(σ))
+
+    
 
     ###########################################################
     # Draw productivities and compute unit costs to produce each good in 
@@ -1111,8 +1255,11 @@ function sim_trade_pattern_melitz_optimized(S, d, θ; Ngoods = 10000, code = 1)
 
     # Vectorized computation of pi_nn and cost_cutoff
     phi_sum = [sum(S .* d[j, :].^(-θ)) for j in 1:Ncntry]
+
     pi_nn = S ./ phi_sum
+    
     cost_cutoff = (pi_nn ./ S).^inv_θ
+    
     markup_cutoff = markup .* cost_cutoff
 
     max_goods = maximum(pi_nn)

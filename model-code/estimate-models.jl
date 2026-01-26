@@ -50,7 +50,7 @@ function estimate_all(years, model, method, Nruns, Nboots, directory; Ngoods = 1
 
         Ncntry = 30
 
-        θ = 4.0
+        θ = 5.0
         σ = 2.5
 
         grv_params = gravity_params(Ncntry = Ncntry, θ = θ, L = ones(Ncntry), dfcntryfix = dfcountryfix )
@@ -76,16 +76,17 @@ function estimate_all(years, model, method, Nruns, Nboots, directory; Ngoods = 1
     # # ################################################################
     # # # Now simmulate the EK model
 
-        @time θest, Jstat =  estimate_θ_dni(df, grv_params, trd_prm,  grvdata; 
+        @time θest, Jstat, model_moments, data_moments =  estimate_θ_dni(df, grv_params, trd_prm,  grvdata; 
             model = model, method = method, Wmat = "optimal", display = false, Nruns = Nruns, Ngoods = Ngoods)
 
 
         println("Year: ", yyy)
         println(" ")
         println("Estimated θ: ", θest, " J-stat: ", Jstat)
+        println(" Model moments: ", model_moments, " Data moments: ", data_moments)
         println(" ")
 
-        θinterval, Jinterval = boot_strap_simulation(θest, grvdata.σν, dftrade, grv_params; 
+        θinterval, Jinterval = boot_strap_simulation(θest, grvdata.σν, dftrade, trd_prm, grv_params; 
             model = model, method = method, code = 269, Nboots = Nboots, Nruns = Nruns, Ngoods = Ngoods)
 
         p90 = quantile(θinterval, 0.9)
@@ -97,9 +98,29 @@ function estimate_all(years, model, method, Nruns, Nboots, directory; Ngoods = 1
 
         println("J-stat percentile: ", Jpercentile)
 
-        dfout = vcat(dfout, DataFrame(θ = θest, J = Jstat, 
+        # dfout = vcat(dfout, DataFrame(θ = θest, J = Jstat, 
+        #     p10 = p10, p90 = p90, Jpercentile = Jpercentile,
+        #     model = model, method = method, year = yyy))
+
+        if method == "over"
+
+            dfout = vcat(dfout, DataFrame(θ = θest, J = Jstat, 
             p10 = p10, p90 = p90, Jpercentile = Jpercentile,
-            model = model, method = method, year = yyy))
+            model_moment_1 = model_moments[1], data_moment_1 = data_moments[1],
+            model_moment_2 = model_moments[2], data_moment_2 = data_moments[2],
+            model_moment_3 = model_moments[3], data_moment_3 = data_moments[3], 
+                model = model, method = method, year = yyy))
+
+        else
+
+            dfout = vcat(dfout, DataFrame(θ = θest, J = Jstat,
+            p10 = p10, p90 = p90, Jpercentile = Jpercentile,
+            model_moment = model_moments[1], data_moment = data_moments[1],
+                model = model, method = method, year = yyy))
+
+        end
+
+        dfout = dfout
 
     end
 
