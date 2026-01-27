@@ -1,7 +1,7 @@
 include("gravity-tools.jl")
 include("trade-environment.jl")
-include("simmulate-eaton-kortum.jl")
-include("estimate-models.jl")
+include("simmulate-trade-models.jl")
+include("estimate-trade-models.jl")
 using CSV
 using DataFrames
 using Plots
@@ -18,14 +18,15 @@ year = ["2017"]
 model = "melitz"
 Nruns = 12
 Nboots = 10
-Ngoods = 10000
+Ngoods = 50000
 
 dirname = "./data/"
 
 ##############################################################################################################################
 method = "over"
+σ = 1.5
 
-dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
+dfout = estimate_all(year, σ, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
 
 # CSV.write("./results/melitz-estimate-"*method*".csv", dfout; writeheader = true)
 

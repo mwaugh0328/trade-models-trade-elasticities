@@ -514,7 +514,8 @@ end
 function sim_trade_pattern_melitz_optimized(trade_parameters; Ngoods = 10000, code = 1)
     # multiple dispatch version of the sim_trade_pattern_melitz_optimized function
 
-    return sim_trade_pattern_melitz_optimized(trade_parameters.S, trade_parameters.d,  trade_parameters.θ; Ngoods = Ngoods, code = code)
+    return sim_trade_pattern_melitz_optimized(trade_parameters.S, trade_parameters.d, 
+    trade_parameters.θ, trade_parameters.σ; Ngoods = Ngoods, code = code)
 
 end
 
@@ -571,7 +572,7 @@ end
 # - Chaney, T. (2008) "Distorted Gravity: The Intensive and Extensive Margins of International Trade"
 # - Melitz, M.J. (2003) "The Impact of Trade on Intra-Industry Reallocations and Aggregate Industry Productivity"
 
-function sim_trade_pattern_melitz_optimized(S, d, θ; Ngoods = 10000, code = 1)
+function sim_trade_pattern_melitz_optimized(S, d, θ, σ; Ngoods = 10000, code = 1)
     
     Ncntry = length(S)
    
@@ -580,10 +581,10 @@ function sim_trade_pattern_melitz_optimized(S, d, θ; Ngoods = 10000, code = 1)
     # =========================================================================
     # η = θ + 1 is the elasticity of substitution across varieties (CES parameter)
     # In Melitz-Chaney, θ (Pareto shape) and η are linked; this follows SW's notation
-    η = θ + 1
-    markup = η / (η - 1)        # CES markup: p = (η/(η-1)) ⋅ mc
+    #σ = θ + 1
+    markup = σ / (σ - 1)        # CES markup: p = (η/(η-1)) ⋅ mc
     inv_θ = 1 / θ
-    one_minus_η = one(η) - η    # Exponent for CES price aggregation: p^(1-η)
+    one_minus_σ = one(σ) - σ    # Exponent for CES price aggregation: p^(1-η)
    
     # =========================================================================
     # Compute Domestic Shares and Cutoffs
@@ -700,7 +701,7 @@ function sim_trade_pattern_melitz_optimized(S, d, θ; Ngoods = 10000, code = 1)
                
                 if price > 0
                     # CES expenditure share: proportional to p^(1-η)
-                    price_power = price^one_minus_η
+                    price_power = price^one_minus_σ
                     m[im, ex] += price_power
                     sum_price[im] += price_power
                 else

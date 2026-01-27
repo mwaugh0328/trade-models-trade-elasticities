@@ -1,4 +1,4 @@
-function estimate_all(years, model, method, Nruns, Nboots, directory; Ngoods = 100000)
+function estimate_all(years, σ, model, method, Nruns, Nboots, directory; Ngoods = 100000)
 
     dfout = DataFrame()
 
@@ -66,7 +66,7 @@ function estimate_all(years, model, method, Nruns, Nboots, directory; Ngoods = 1
         Ncntry = 30
 
         θ = 5.0
-        σ = 2.5
+        σ = σ
 
         grv_params = gravity_params(Ncntry = Ncntry, θ = θ, L = ones(Ncntry), dfcntryfix = dfcountryfix )
 
@@ -327,6 +327,8 @@ function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
 
     p = SciMLBase.NullParameters()
 
+    println("value of σ: ", trade_parameters.σ)
+
     f(x, p) = estimate_θ_dni(x[1], dfdni.dni, gravity_parameters, trade_parameters,
             gravity_results; model = model, display = display, return_moments = false, Nruns = Nruns, Nprices = Nprices, Ngoods = Ngoods)
 
@@ -456,7 +458,7 @@ function estimate_θ_dni(θ, dni, dni2, dist, gravity_parameters, trade_paramete
 
     # println( mean(foo.d) )
 
-    println("Number of Prices: ", Nprices)
+    # println("Number of Prices: ", Nprices)
 
     sim_dni, sim_dni2 = generate_moments(foo, Nruns; model = model, method = "over", Nprices = Nprices, Ngoods = Ngoods) 
 

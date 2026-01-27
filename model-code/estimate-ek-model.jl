@@ -20,13 +20,14 @@ year = ["2004", "2011", "2017"]
 model = "ek"
 Nruns = 12
 Nboots = 10
+σ = 1.5
 
 dirname = "./data/"
 
 # ##############################################################################################################################
 method = "over"
 
-dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = 50000)
+dfout = estimate_all(year, σ, model, method, Nruns, Nboots, dirname; Ngoods = 50000)
 
 # # CSV.write("./results/ek-estimate-"*method*".csv", dfout; writeheader = true)
 
@@ -34,6 +35,6 @@ dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = 50000
 
 # method = "exact"
 
-# dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = 50000)
+# dfout = estimate_all(year, σ, model, method, Nruns, Nboots, dirname; Ngoods = 50000)
 
 # CSV.write("./results/ek-estimate-"*method*".csv", dfout; writeheader = true)
