@@ -1,3 +1,52 @@
+function make_trade_data(directory, year)
+    # A function to load and prepare the trade data for estimation
+
+    df = DataFrame(CSV.File(directory*"pricegap-df-"*year*".csv"))
+
+    grav_file = directory*"top30_gravity_data.csv"
+
+    dfgrav = DataFrame(CSV.File(grav_file))
+
+    rename!(df, Dict("exporter" => "iso_o", "importer" => "iso_d"))
+
+    df = innerjoin(df, dfgrav, on = ["iso_o", "iso_d"])
+
+    dftariffs = DataFrame(CSV.File(directory*"tariffs-"*year*".csv"))
+
+    rename!(dftariffs, Dict("exporter" => "iso_o", "importer" => "iso_d"))
+
+    df = innerjoin(df, dftariffs, on = ["iso_o", "iso_d"])
+
+    filter!(row -> ~(row.Xni ≈ 1.0), df);
+
+    # filter!(row -> ~(row.Xni ≈ 0.0), df);
+
+    # println( mean(df.logXni) / mean(df.dni) )
+
+    # test = CorrelationTest(log.(df.dist), df.dni2)
+
+
+    ################################################################
+
+    dftrade = DataFrame(CSV.File(directory*"tradeshare-df-"*year*".csv"))
+
+    dftrade[!,"trade"] = log.(dftrade[!,"norm_tradeshare"] )
+
+    # removing the home trade flows
+    filter!(row -> ~(row.norm_tradeshare ≈ 1.0), dftrade);
+    dfcountryfix = deepcopy(dftrade)
+
+    # remove the zero trade flows
+    filter!(row -> ~(row.norm_tradeshare ≈ 0.0), dftrade);
+
+    return df, dftrade, dfcountryfix
+
+end
+
+###############################################################
+###############################################################
+
+
 function estimate_all(years, σ, model, method, Nruns, Nboots, directory; Ngoods = 100000)
 
     dfout = DataFrame()
@@ -24,48 +73,13 @@ function estimate_all(years, σ, model, method, Nruns, Nboots, directory; Ngoods
             Nprices = 71
 
         end
-
-        df = DataFrame(CSV.File(directory*"pricegap-df-"*yyy*".csv"))
-
-        grav_file = directory*"top30_gravity_data.csv"
-
-        dfgrav = DataFrame(CSV.File(grav_file))
-
-        rename!(df, Dict("exporter" => "iso_o", "importer" => "iso_d"))
-
-        df = innerjoin(df, dfgrav, on = ["iso_o", "iso_d"])
-
-        dftariffs = DataFrame(CSV.File(directory*"tariffs-"*yyy*".csv"))
-
-        rename!(dftariffs, Dict("exporter" => "iso_o", "importer" => "iso_d"))
-
-        df = innerjoin(df, dftariffs, on = ["iso_o", "iso_d"])
-
-        filter!(row -> ~(row.Xni ≈ 1.0), df);
-
-        # filter!(row -> ~(row.Xni ≈ 0.0), df);
-
-        # println( mean(df.logXni) / mean(df.dni) )
-
-        test = CorrelationTest(log.(df.dist), df.dni2)
-
-
-        ################################################################
-
-        dftrade = DataFrame(CSV.File(directory*"tradeshare-df-"*yyy*".csv"))
-
-        dftrade[!,"trade"] = log.(dftrade[!,"norm_tradeshare"] )
-
-        # removing the home trade flows
-        filter!(row -> ~(row.norm_tradeshare ≈ 1.0), dftrade);
-        dfcountryfix = deepcopy(dftrade)
-
-        # remove the zero trade flows
-        filter!(row -> ~(row.norm_tradeshare ≈ 0.0), dftrade);
+        
+        # Load the trade data for use in the estimation
+        df, dftrade, dfcountryfix = make_trade_data(directory, yyy)
 
         Ncntry = 30
 
-        θ = 5.0
+        θ = 5.0 # initial value for the trade elasticity
         σ = σ
 
         grv_params = gravity_params(Ncntry = Ncntry, θ = θ, L = ones(Ncntry), dfcntryfix = dfcountryfix )
