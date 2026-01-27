@@ -227,7 +227,7 @@ function build_dni(pricemat, gross_output, tradeshare, tradevalue)
 
         cntry = nrow(gross_output)
 
-        df = DataFrame(exporter = String[], importer=String[], Xni = Float64[], logXni = Float64[],
+        df = DataFrame(exporter = String[], importer=String[], E_importer = Float64[], Xni = Float64[], logXni = Float64[],
          dni=Float64[], dni2=Float64[], dni3 = Float64[], τni = Float64[], tradevalue = Float64[])
     
         # Log of price matrix
@@ -273,7 +273,8 @@ function build_dni(pricemat, gross_output, tradeshare, tradevalue)
                 τni[exporter, importer] = num
                 
 
-                push!(df, (gross_output[exporter, "ISO_Code"], gross_output[importer, "ISO_Code"], 
+                push!(df, (gross_output[exporter, "ISO_Code"], gross_output[importer, "ISO_Code"],
+                gross_output[importer, "Value"], 
                 tradeshare[exporter, importer] / tradeshare[exporter, exporter],
                 log(tradeshare[exporter, importer] / tradeshare[exporter, exporter]),
                 dni[exporter, importer],
@@ -301,7 +302,7 @@ function build_dni(pricemat, gross_output, tradeshare)
 
         cntry = nrow(gross_output)
 
-        df = DataFrame(exporter = String[], importer=String[], Xni = Float64[], logXni = Float64[],
+        df = DataFrame(exporter = String[], importer=String[], E_importer = Float64[], Xni = Float64[], logXni = Float64[],
          dni=Float64[], dni2=Float64[], dni3 = Float64[], τni = Float64[])
     
         # Log of price matrix
@@ -347,7 +348,8 @@ function build_dni(pricemat, gross_output, tradeshare)
                 τni[exporter, importer] = num
                 
 
-                push!(df, (gross_output[exporter, "ISO_Code"], gross_output[importer, "ISO_Code"], 
+                push!(df, (gross_output[exporter, "ISO_Code"], gross_output[importer, "ISO_Code"],
+                gross_output[importer, "Value"], 
                 tradeshare[exporter, importer] / tradeshare[exporter, exporter],
                 log(tradeshare[exporter, importer] / tradeshare[exporter, exporter]),
                 dni[exporter, importer],

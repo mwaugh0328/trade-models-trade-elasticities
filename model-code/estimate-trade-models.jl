@@ -1,5 +1,6 @@
 function make_trade_data(directory, year)
     # A function to load and prepare the trade data for estimation
+    # df, dftrade, dfcountryfix = make_trade_data(directory, year[1])
 
     df = DataFrame(CSV.File(directory*"pricegap-df-"*year*".csv"))
 

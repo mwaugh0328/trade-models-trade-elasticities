@@ -32,9 +32,9 @@ rename!(tradeshare_df, Dict("exporter" => "iso_o", "importer" => "iso_d"))
 
 trade_grav_df = innerjoin(tradeshare_df, df, on = ["iso_o", "iso_d"])
 
-# outfile = "tradeshare-df-2017.csv"
+outfile = "./data/tradeshare-df-2017.csv"
 
-# CSV.write(outfile, trade_grav_df, header = true)  # Write the DataFrame to a CSV file
+CSV.write(outfile, trade_grav_df, header = true)  # Write the DataFrame to a CSV file
 
 ###########################################################################################
 
@@ -50,6 +50,6 @@ println("number of prices in 2017: ", Nprices)
 
 df = build_dni(pricemat, gross_output, tradeshare)
 
-# outfile = "pricegap-df-2017.csv"
+outfile = "./data/pricegap-df-2017.csv"
 
-# CSV.write(outfile, df, header = true)  # Write the DataFrame to a CSV file
+CSV.write(outfile, df, header = true)  # Write the DataFrame to a CSV file

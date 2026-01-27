@@ -43,12 +43,12 @@ tradeshare, tradeshare_df = construct_tradeshare(new_trade_mat, gross_output)
 
 df = build_dni(pricemat, gross_output, tradeshare)
 
-outfile = "pricegap-df-2011.csv"
+outfile = "./data/pricegap-df-2011.csv"
 
 CSV.write(outfile, df, header = true)  # Write the DataFrame to a CSV file
 
-##########################################################################################
-##########################################################################################
+# ##########################################################################################
+# ##########################################################################################
 
 println("working on year 2004")
 println(" ")
@@ -84,7 +84,7 @@ tradeshare, tradeshare_df = construct_tradeshare(new_trade_mat, gross_output)
 
 df = build_dni(pricemat, gross_output, tradeshare)
 
-outfile = "pricegap-df-2004.csv"
+outfile = "./data/pricegap-df-2004.csv"
 
 CSV.write(outfile, df, header = true)  # Write the DataFrame to a CSV file
 
