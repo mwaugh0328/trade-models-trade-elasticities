@@ -1243,84 +1243,300 @@ function sim_trade_pattern_melitz_optimized(trade_parameters; Ngoods = 10000, co
 
 end
 
-# Optimized version of sim_trade_pattern_melitz
+# # Optimized version of sim_trade_pattern_melitz
+# function sim_trade_pattern_melitz_optimized(S, d, θ; Ngoods = 10000, code = 1)
+
+#     Ncntry = length(S)
+    
+#     η = θ + 1
+#     markup = η / (η - 1)    
+#     inv_θ = 1 / θ
+#     one_minus_η = one(η) - η
+
+#     # Vectorized computation of pi_nn and cost_cutoff
+#     phi_sum = [sum(S .* d[j, :].^(-θ)) for j in 1:Ncntry]
+
+#     pi_nn = S ./ phi_sum
+    
+#     cost_cutoff = (pi_nn ./ S).^inv_θ
+    
+#     markup_cutoff = markup .* cost_cutoff
+
+#     max_goods = maximum(pi_nn)
+
+#     m = zeros(Ncntry, Ncntry)
+
+#     sum_price = zeros(Ncntry)
+    
+#     # Pre-allocate price matrix
+#     price_matrix = zeros(Ncntry, Ngoods)
+
+#     # Vectorized price matrix assignment
+#     for j in 1:Ncntry
+#         cgoods = round(Int, Ngoods * (pi_nn[j] / max_goods))
+#         if cgoods > 0
+#             u = rand(MersenneTwister(03281978 + code + j), cgoods)
+#             u .*= pi_nn[j]
+#             price_matrix[j, 1:cgoods] .= markup .* (u ./ S[j]).^inv_θ
+#         end
+#     end
+
+#     final_price = Array{Float64}(undef, Ncntry, Ncntry * Ngoods)
+
+#     # Pre-allocate arrays
+#     carry_prices = zeros(Ncntry, Ngoods)
+    
+#     # Optimized main computation loop
+#     @inbounds for im in 1:Ncntry
+#         fill!(carry_prices, 0.0)  # Reset instead of allocating new array
+        
+#         # Vectorized operations where possible
+#         for gd in 1:Ngoods
+#             # Home country always included
+#             carry_prices[im, gd] = price_matrix[im, gd]
+            
+#             # Check export conditions for other countries
+#             for ex in 1:Ncntry
+#                 if ex != im
+#                     cif_price = d[im, ex] * price_matrix[ex, gd]
+#                     if cif_price <= markup_cutoff[im] && price_matrix[ex, gd] > 0
+#                         carry_prices[ex, gd] = cif_price
+#                     end
+#                 end
+                
+#                 # Compute trade shares and price aggregates
+#                 price = carry_prices[ex, gd]
+#                 if price > 0
+#                     price_power = price^one_minus_η
+#                     m[im, ex] += price_power
+#                     sum_price[im] += price_power
+#                 else
+#                     carry_prices[ex, gd] = NaN
+#                 end
+#             end
+#         end
+
+#         # Use view instead of copying
+#         @views final_price[im, :] .= vec(carry_prices)
+#     end
+
+#     # Normalize trade shares efficiently
+#     @inbounds for im in 1:Ncntry
+#         g_val = sum_price[im]
+#         if g_val > 0
+#             for ex in 1:Ncntry
+#                 m[im, ex] /= g_val
+#             end
+#         end
+#     end
+
+#     # Vectorized common_set computation
+#     common_set = [all(!isnan, @view final_price[:, gd]) for gd in 1:(Ncntry * Ngoods)]
+
+#     return m, final_price, common_set
+# end
+
+###############################################################################################
+# NOTES on the MELITZ implementation in the function sim_trade_pattern_melitz_optimized
+
+# Simulates bilateral trade patterns and micro-level prices from the Melitz model
+# following the Simonovska-Waugh (SW) parameterization.
+
+# # Model Setup (SW / Chaney 2008 Assumptions)
+
+# This implementation assumes fixed export costs are proportional to origin country size:
+#     fᵢⱼ = f ⋅ Lᵢ
+
+# Under this assumption, the fraction of country i's firms selling in country j simplifies to:
+#     Nᵢⱼ/Nᵢ = (dᵢⱼ⁻θ ⋅ Sⱼ) / Φᵢ
+
+# where Φᵢ = Σₖ dᵢₖ⁻θ ⋅ Sₖ is the "market access" term. This convenient form arises
+# because the Lᵢ terms cancel in the ratio of cutoffs.
+
+# Key Theoretical Points
+
+# 1. **Domestic share**: πⱼⱼ = Sⱼ/Φⱼ gives the fraction of varieties in j produced domestically.
+#    This differs from EK where all goods are potentially produced everywhere.
+
+# 2. **Export selection**: A firm from country `ex` with domestic price p can export to `im` if:
+#        p ⋅ d[im,ex] ≤ p̄ᵢₘ
+#    where p̄ᵢₘ is the destination's domestic cutoff price. The proportional fixed cost
+#    assumption makes the destination's domestic cutoff the relevant threshold.
+
+# 3. **Price distribution**: Firm productivity φ ~ Pareto(φ*, θ) conditional on entry.
+#    Under SW normalization, φ* = Φʲ^(1/θ), so drawing u ~ U(0,1) and computing
+#        p = markup ⋅ (u ⋅ πⱼⱼ / Sⱼ)^(1/θ)
+#    yields the correct truncated Pareto distribution of prices.
+
+# 4. **Common set**: Only the most productive firms clear all export cutoffs and sell in
+#    every market. This set is smaller than in EK, which is why θ_Melitz < θ_EK for
+#    the same data — selection compresses observed price gaps.
+
+# # Arguments
+# - `S::Vector`: Technology parameters (analogous to Tᵢ in EK) for each country
+# - `d::Matrix`: Bilateral trade costs (iceberg), d[i,j] = cost for j to sell in i
+# - `θ::Real`: Pareto shape parameter (governs productivity dispersion)
+# - `Ngoods::Int=10000`: Number of potential goods to simulate per country
+# - `code::Int=1`: Seed modifier for reproducibility across different runs
+
+# # Returns
+# - `m::Matrix`: Bilateral trade share matrix, m[i,j] = share of i's expenditure on j
+# - `final_price::Matrix`: Price matrix, final_price[i, :] = prices faced by importer i
+# - `common_set::Vector{Bool}`: Indicator for goods sold in all countries (for SW estimation)
+
+# # References
+# - Simonovska, I. and Waugh, M.E. "Trade Models, Trade Elasticities, and the Gains from Trade"
+# - Chaney, T. (2008) "Distorted Gravity: The Intensive and Extensive Margins of International Trade"
+# - Melitz, M.J. (2003) "The Impact of Trade on Intra-Industry Reallocations and Aggregate Industry Productivity"
+
 function sim_trade_pattern_melitz_optimized(S, d, θ; Ngoods = 10000, code = 1)
-
+    
     Ncntry = length(S)
-    
+   
+    # =========================================================================
+    # Model Parameters
+    # =========================================================================
+    # η = θ + 1 is the elasticity of substitution across varieties (CES parameter)
+    # In Melitz-Chaney, θ (Pareto shape) and η are linked; this follows SW's notation
     η = θ + 1
-    markup = η / (η - 1)    
+    markup = η / (η - 1)        # CES markup: p = (η/(η-1)) ⋅ mc
     inv_θ = 1 / θ
-    one_minus_η = one(η) - η
-
-    # Vectorized computation of pi_nn and cost_cutoff
+    one_minus_η = one(η) - η    # Exponent for CES price aggregation: p^(1-η)
+   
+    # =========================================================================
+    # Compute Domestic Shares and Cutoffs
+    # =========================================================================
+    # Φⱼ = Σᵢ Sᵢ ⋅ dⱼᵢ⁻θ is the "multilateral resistance" / market access term
+    # Under SW's proportional fixed cost assumption, this fully characterizes
+    # the competitive environment in each market
     phi_sum = [sum(S .* d[j, :].^(-θ)) for j in 1:Ncntry]
-
+   
+    # πⱼⱼ = Sⱼ/Φⱼ = domestic expenditure share = fraction of varieties from home
+    # This is the Melitz analog of the EK domestic trade share
     pi_nn = S ./ phi_sum
-    
+   
+    # Cost cutoff: firms with marginal cost c ≤ c* produce
+    # Under SW normalization: c* = (πⱼⱼ/Sⱼ)^(1/θ) = Φⱼ^(-1/θ)
+    # Equivalently, productivity cutoff φ* = Φⱼ^(1/θ)
     cost_cutoff = (pi_nn ./ S).^inv_θ
-    
+   
+    # Maximum price at which a firm can sell domestically
+    # Firms with p > markup ⋅ c* cannot cover fixed costs and exit
     markup_cutoff = markup .* cost_cutoff
-
+   
+    # =========================================================================
+    # Initialize Storage
+    # =========================================================================
     max_goods = maximum(pi_nn)
-
-    m = zeros(Ncntry, Ncntry)
-
-    sum_price = zeros(Ncntry)
-    
-    # Pre-allocate price matrix
-    price_matrix = zeros(Ncntry, Ngoods)
-
-    # Vectorized price matrix assignment
+    m = zeros(Ncntry, Ncntry)           # Trade share matrix
+    sum_price = zeros(Ncntry)            # Price index aggregator (Σ p^(1-η))
+    price_matrix = zeros(Ncntry, Ngoods) # Domestic prices by origin country
+   
+    # =========================================================================
+    # Generate Domestic Prices via Pareto Productivity Draws
+    # =========================================================================
+    # For each country j, we simulate the prices of firms that successfully enter.
+    #
+    # Theory: φ ~ Pareto(φ*, θ) ⟹ drawing u ~ U(0,1), set φ = φ* ⋅ u^(-1/θ)
+    # Price: p = markup/φ = markup ⋅ u^(1/θ) / φ*
+    #
+    # Under SW normalization where φ* = Φⱼ^(1/θ) = (Sⱼ/πⱼⱼ)^(1/θ):
+    #   p = markup ⋅ u^(1/θ) ⋅ (πⱼⱼ/Sⱼ)^(1/θ) = markup ⋅ (u ⋅ πⱼⱼ/Sⱼ)^(1/θ)
+    #
+    # We scale the number of goods by πⱼⱼ/max(π) so larger countries have more
+    # varieties, matching the extensive margin predictions of Melitz.
+   
     for j in 1:Ncntry
+        # Number of goods produced in country j (scaled by relative domestic share)
         cgoods = round(Int, Ngoods * (pi_nn[j] / max_goods))
+       
         if cgoods > 0
+            # Seeded RNG for reproducibility across runs
+            # Note: Creating MersenneTwister per country is intentional for reproducibility
+            # but has some performance cost; acceptable for typical Ncntry (< 100)
             u = rand(MersenneTwister(03281978 + code + j), cgoods)
+           
+            # Scale uniform draws and transform to get Pareto-distributed prices
             u .*= pi_nn[j]
             price_matrix[j, 1:cgoods] .= markup .* (u ./ S[j]).^inv_θ
         end
+        # Note: Goods cgoods+1 : Ngoods remain at zero for country j
+        # This represents goods that don't exist because no firm in j had
+        # sufficient productivity to enter. This is intentional and handled below.
     end
-
+   
+    # =========================================================================
+    # Storage for Final Prices and Trade Computation
+    # =========================================================================
+    # final_price[im, :] stores all prices (domestic and imported) faced by importer im
+    # Dimensions: Ncntry importers × (Ncntry × Ngoods) potential goods
     final_price = Array{Float64}(undef, Ncntry, Ncntry * Ngoods)
-
-    # Pre-allocate arrays
+   
+    # Temporary matrix for prices available in each destination market
     carry_prices = zeros(Ncntry, Ngoods)
-    
-    # Optimized main computation loop
+   
+    # =========================================================================
+    # Main Loop: Compute Trade Shares and Delivered Prices
+    # =========================================================================
     @inbounds for im in 1:Ncntry
-        fill!(carry_prices, 0.0)  # Reset instead of allocating new array
-        
-        # Vectorized operations where possible
+        fill!(carry_prices, 0.0)  # Reset for each importing country
+       
         for gd in 1:Ngoods
-            # Home country always included
+            # -----------------------------------------------------------------
+            # Home country prices: always "available" if the good exists
+            # -----------------------------------------------------------------
+            # If price_matrix[im, gd] = 0, no domestic firm produces this good
+            # (productivity draw was below cutoff). This is intentional — not
+            # all goods exist in all countries under Melitz.
             carry_prices[im, gd] = price_matrix[im, gd]
-            
-            # Check export conditions for other countries
+           
+            # -----------------------------------------------------------------
+            # Check export conditions for foreign countries
+            # -----------------------------------------------------------------
             for ex in 1:Ncntry
                 if ex != im
+                    # CIF price = FOB price × iceberg trade cost
                     cif_price = d[im, ex] * price_matrix[ex, gd]
+                   
+                    # Export selection condition (SW/Chaney):
+                    # A firm exports from ex to im if its delivered price clears
+                    # the destination's cutoff. Under proportional fixed costs,
+                    # the relevant threshold is the importer's domestic cutoff.
+                    #
+                    # Also require price_matrix[ex, gd] > 0 (good must exist in origin)
                     if cif_price <= markup_cutoff[im] && price_matrix[ex, gd] > 0
                         carry_prices[ex, gd] = cif_price
                     end
                 end
-                
-                # Compute trade shares and price aggregates
+            end
+           
+            # -----------------------------------------------------------------
+            # Aggregate into trade shares and price index
+            # -----------------------------------------------------------------
+            for ex in 1:Ncntry
                 price = carry_prices[ex, gd]
+               
                 if price > 0
+                    # CES expenditure share: proportional to p^(1-η)
                     price_power = price^one_minus_η
                     m[im, ex] += price_power
                     sum_price[im] += price_power
                 else
+                    # Mark as NaN: good not available from this origin in this market
+                    # Used later to identify common set of goods sold everywhere
                     carry_prices[ex, gd] = NaN
                 end
             end
         end
-
-        # Use view instead of copying
+       
+        # Store all prices for this importer (flattened across origins × goods)
         @views final_price[im, :] .= vec(carry_prices)
     end
-
-    # Normalize trade shares efficiently
+   
+    # =========================================================================
+    # Normalize Trade Shares
+    # =========================================================================
+    # Convert expenditure-weighted sums to shares: m[im, ex] / Σₖ m[im, k]
     @inbounds for im in 1:Ncntry
         g_val = sum_price[im]
         if g_val > 0
@@ -1329,9 +1545,31 @@ function sim_trade_pattern_melitz_optimized(S, d, θ; Ngoods = 10000, code = 1)
             end
         end
     end
+   
+    # =========================================================================
+    # Identify Common Set of Goods
+    # =========================================================================
+    # The "common set" contains goods sold in ALL countries — these are produced
+    # by the most productive firms that clear every export cutoff.
+    #
+    # Key insight (SW): The common set is smaller in Melitz than EK because
+    # selection is more stringent. Only top-productivity firms export everywhere.
+    # This is why θ_Melitz < θ_EK when estimated on the same price data —
+    # selection compresses the observed distribution of price gaps.
+    #
+    # For SW estimation, moments are computed on this common set to ensure
+    # comparability of prices across countries.
+    # For each good, check if it's sold in all countries (no NaN prices)
+    common_set = Vector{Bool}(undef, Ncntry * Ngoods)
 
-    # Vectorized common_set computation
-    common_set = [all(!isnan, @view final_price[:, gd]) for gd in 1:(Ncntry * Ngoods)]
-
+    for gd in 1:(Ncntry * Ngoods)
+    
+        prices_this_good = @view final_price[:, gd]
+    
+        sold_everywhere = all(p -> !isnan(p), prices_this_good)
+    
+        common_set[gd] = sold_everywhere
+    end
+   
     return m, final_price, common_set
 end

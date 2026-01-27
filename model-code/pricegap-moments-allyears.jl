@@ -78,3 +78,10 @@ outreg = reg(big_df, @formula(log(dni) ~  fe(year) + border + log(dist) + log(1.
 # # Run regression with year fixed effect
 
 println(outreg)
+
+
+outreg = reg(big_df, @formula(log(dni) ~  fe(year) + fe(importer) + fe(exporter) +border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
+
+# # Run regression with year fixed effect
+
+println(outreg)
