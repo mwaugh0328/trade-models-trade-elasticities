@@ -22,6 +22,8 @@ price_data = data_set["Sheet1"][1:136,1:160]
 
 pricemat = adjust_price_data(price_data)
 
+println("number of prices in 2011: ", size(pricemat, 2))
+
 trade_flow_file = "./build-data-code/feenstra-trade-data/wtf_11mat.txt"
 
 input_wtf = readdlm(trade_flow_file, ',', Float64)
@@ -60,6 +62,8 @@ istraded = mat_data["istraded"]
 ttt = istraded .≈ 0.0
 
 pricemat = pricemat[:, .!vec(ttt)]
+
+println("number of prices in 2004: ", size(pricemat, 2))
 
 trade_flow_file = "./build-data-code/feenstra-trade-data/wtf_04mat.txt"
 

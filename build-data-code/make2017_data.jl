@@ -22,9 +22,9 @@ tradedf = DataFrame(CSV.File(trade_file))
 
 tradeshare, tradeshare_df = construct_tradeshare_baci(tradedf, gross_output)
 
-outfile = "tradevalue-df-2017.csv"
+# outfile = "tradevalue-df-2017.csv"
 
-CSV.write(outfile, tradedf , header = true)  # Write the DataFrame to a CSV file
+# CSV.write(outfile, tradedf , header = true)  # Write the DataFrame to a CSV file
 
 ###########################################################################################
 
@@ -32,9 +32,9 @@ rename!(tradeshare_df, Dict("exporter" => "iso_o", "importer" => "iso_d"))
 
 trade_grav_df = innerjoin(tradeshare_df, df, on = ["iso_o", "iso_d"])
 
-outfile = "tradeshare-df-2017.csv"
+# outfile = "tradeshare-df-2017.csv"
 
-CSV.write(outfile, trade_grav_df, header = true)  # Write the DataFrame to a CSV file
+# CSV.write(outfile, trade_grav_df, header = true)  # Write the DataFrame to a CSV file
 
 ###########################################################################################
 
@@ -43,6 +43,10 @@ price_file = "./build-data-code/2017-price-gap/2017_traded_prices.csv"
 pricedf = DataFrame(CSV.File(price_file))
 
 pricemat = Matrix(pricedf[:, 2:end])
+
+Nprices = size(pricemat, 2)
+
+println("number of prices in 2017: ", Nprices)
 
 df = build_dni(pricemat, gross_output, tradeshare)
 

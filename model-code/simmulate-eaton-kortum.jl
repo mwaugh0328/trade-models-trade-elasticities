@@ -175,7 +175,7 @@ end
 ##############################################################################################################################
 
 function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
-            gravity_results; model = "ek", method = "exact", Wmat = "optimal", display = true, Nruns = 10, Ngoods = 100000)
+            gravity_results; model = "ek", method = "exact", Wmat = "optimal", display = true, Nruns = 10, Nprices = 70, Ngoods = 100000)
 
     lb = [2.5,]
     ub = [10.0,]
@@ -183,10 +183,10 @@ function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
     p = SciMLBase.NullParameters()
 
     f(x, p) = estimate_θ_dni(x[1], dfdni.dni, gravity_parameters, trade_parameters,
-            gravity_results; model = model, display = display, return_moments = false, Nruns = Nruns, Ngoods = Ngoods)
+            gravity_results; model = model, display = display, return_moments = false, Nruns = Nruns, Nprices = Nprices, Ngoods = Ngoods)
 
     g(x, p) = estimate_θ_dni(x[1], dfdni.dni, dfdni.dni2, dfdni.dist,  gravity_parameters, trade_parameters,
-            gravity_results; model = model, Wmat = Wmat, display = display, return_moments = false, Nruns = Nruns, Ngoods = Ngoods)
+            gravity_results; model = model, Wmat = Wmat, display = display, return_moments = false, Nruns = Nruns, Nprices = Nprices, Ngoods = Ngoods)
 
     if method == "exact"
 
@@ -208,12 +208,12 @@ function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
     if method == "exact"
 
         ~, data_moments, model_moments = estimate_θ_dni(solution_value, dfdni.dni, gravity_parameters, trade_parameters,
-            gravity_results; model = model, display = display, return_moments = true, Nruns = Nruns, Ngoods = Ngoods)
+            gravity_results; model = model, display = display, return_moments = true, Nruns = Nruns, Nprices = Nprices, Ngoods = Ngoods)
 
     else
 
         ~, data_moments, model_moments = estimate_θ_dni(solution_value, dfdni.dni, dfdni.dni2, dfdni.dist,  gravity_parameters, trade_parameters,
-            gravity_results; model = model, Wmat = Wmat, display = display, return_moments = true, Nruns = Nruns, Ngoods = Ngoods)
+            gravity_results; model = model, Wmat = Wmat, display = display, return_moments = true, Nruns = Nruns, Nprices = Nprices, Ngoods = Ngoods)
 
             
 
@@ -310,6 +310,8 @@ function estimate_θ_dni(θ, dni, dni2, dist, gravity_parameters, trade_paramete
     foo = trade_params(θ = θ, d = d, trade_parameters)
 
     # println( mean(foo.d) )
+
+    println("Number of Prices: ", Nprices)
 
     sim_dni, sim_dni2 = generate_moments(foo, Nruns; model = model, method = "over", Nprices = Nprices, Ngoods = Ngoods) 
 
@@ -644,10 +646,10 @@ function boot_strap_simulation(θ, σν, tradedata, trade_parameters, gravity_pa
                 model = model, code = code + xxx, Nprices = Nprices, Ngoods = Ngoods)
 
         f(x, p) = estimate_θ_dni(x[1], sim_df.dni, gravity_parameters, foo_trade_parameters,
-            gravity_results; model = model, display = false, Ngoods = Ngoods, Nruns = Nruns )
+            gravity_results; model = model, display = false, Ngoods = Ngoods, Nruns = Nruns, Nprices = Nprices )
 
         g(x, p) = estimate_θ_dni(x[1], sim_df.dni, sim_df.dni2, sim_df.dist,  gravity_parameters, foo_trade_parameters,
-            gravity_results; model = model, Wmat = Wmat, display = false, Ngoods = Ngoods, Nruns = Nruns )
+            gravity_results; model = model, Wmat = Wmat, display = false, Ngoods = Ngoods, Nruns = Nruns, Nprices = Nprices )
 
         if method == "exact"
 
@@ -1243,99 +1245,6 @@ function sim_trade_pattern_melitz_optimized(trade_parameters; Ngoods = 10000, co
 
 end
 
-# # Optimized version of sim_trade_pattern_melitz
-# function sim_trade_pattern_melitz_optimized(S, d, θ; Ngoods = 10000, code = 1)
-
-#     Ncntry = length(S)
-    
-#     η = θ + 1
-#     markup = η / (η - 1)    
-#     inv_θ = 1 / θ
-#     one_minus_η = one(η) - η
-
-#     # Vectorized computation of pi_nn and cost_cutoff
-#     phi_sum = [sum(S .* d[j, :].^(-θ)) for j in 1:Ncntry]
-
-#     pi_nn = S ./ phi_sum
-    
-#     cost_cutoff = (pi_nn ./ S).^inv_θ
-    
-#     markup_cutoff = markup .* cost_cutoff
-
-#     max_goods = maximum(pi_nn)
-
-#     m = zeros(Ncntry, Ncntry)
-
-#     sum_price = zeros(Ncntry)
-    
-#     # Pre-allocate price matrix
-#     price_matrix = zeros(Ncntry, Ngoods)
-
-#     # Vectorized price matrix assignment
-#     for j in 1:Ncntry
-#         cgoods = round(Int, Ngoods * (pi_nn[j] / max_goods))
-#         if cgoods > 0
-#             u = rand(MersenneTwister(03281978 + code + j), cgoods)
-#             u .*= pi_nn[j]
-#             price_matrix[j, 1:cgoods] .= markup .* (u ./ S[j]).^inv_θ
-#         end
-#     end
-
-#     final_price = Array{Float64}(undef, Ncntry, Ncntry * Ngoods)
-
-#     # Pre-allocate arrays
-#     carry_prices = zeros(Ncntry, Ngoods)
-    
-#     # Optimized main computation loop
-#     @inbounds for im in 1:Ncntry
-#         fill!(carry_prices, 0.0)  # Reset instead of allocating new array
-        
-#         # Vectorized operations where possible
-#         for gd in 1:Ngoods
-#             # Home country always included
-#             carry_prices[im, gd] = price_matrix[im, gd]
-            
-#             # Check export conditions for other countries
-#             for ex in 1:Ncntry
-#                 if ex != im
-#                     cif_price = d[im, ex] * price_matrix[ex, gd]
-#                     if cif_price <= markup_cutoff[im] && price_matrix[ex, gd] > 0
-#                         carry_prices[ex, gd] = cif_price
-#                     end
-#                 end
-                
-#                 # Compute trade shares and price aggregates
-#                 price = carry_prices[ex, gd]
-#                 if price > 0
-#                     price_power = price^one_minus_η
-#                     m[im, ex] += price_power
-#                     sum_price[im] += price_power
-#                 else
-#                     carry_prices[ex, gd] = NaN
-#                 end
-#             end
-#         end
-
-#         # Use view instead of copying
-#         @views final_price[im, :] .= vec(carry_prices)
-#     end
-
-#     # Normalize trade shares efficiently
-#     @inbounds for im in 1:Ncntry
-#         g_val = sum_price[im]
-#         if g_val > 0
-#             for ex in 1:Ncntry
-#                 m[im, ex] /= g_val
-#             end
-#         end
-#     end
-
-#     # Vectorized common_set computation
-#     common_set = [all(!isnan, @view final_price[:, gd]) for gd in 1:(Ncntry * Ngoods)]
-
-#     return m, final_price, common_set
-# end
-
 ###############################################################################################
 # NOTES on the MELITZ implementation in the function sim_trade_pattern_melitz_optimized
 
@@ -1573,3 +1482,98 @@ function sim_trade_pattern_melitz_optimized(S, d, θ; Ngoods = 10000, code = 1)
    
     return m, final_price, common_set
 end
+
+# ##############################################################################################################################
+# OLD - commented out optimized version of Melitz function
+ # Optimized version of sim_trade_pattern_melitz
+# function sim_trade_pattern_melitz_optimized(S, d, θ; Ngoods = 10000, code = 1)
+
+#     Ncntry = length(S)
+    
+#     η = θ + 1
+#     markup = η / (η - 1)    
+#     inv_θ = 1 / θ
+#     one_minus_η = one(η) - η
+
+#     # Vectorized computation of pi_nn and cost_cutoff
+#     phi_sum = [sum(S .* d[j, :].^(-θ)) for j in 1:Ncntry]
+
+#     pi_nn = S ./ phi_sum
+    
+#     cost_cutoff = (pi_nn ./ S).^inv_θ
+    
+#     markup_cutoff = markup .* cost_cutoff
+
+#     max_goods = maximum(pi_nn)
+
+#     m = zeros(Ncntry, Ncntry)
+
+#     sum_price = zeros(Ncntry)
+    
+#     # Pre-allocate price matrix
+#     price_matrix = zeros(Ncntry, Ngoods)
+
+#     # Vectorized price matrix assignment
+#     for j in 1:Ncntry
+#         cgoods = round(Int, Ngoods * (pi_nn[j] / max_goods))
+#         if cgoods > 0
+#             u = rand(MersenneTwister(03281978 + code + j), cgoods)
+#             u .*= pi_nn[j]
+#             price_matrix[j, 1:cgoods] .= markup .* (u ./ S[j]).^inv_θ
+#         end
+#     end
+
+#     final_price = Array{Float64}(undef, Ncntry, Ncntry * Ngoods)
+
+#     # Pre-allocate arrays
+#     carry_prices = zeros(Ncntry, Ngoods)
+    
+#     # Optimized main computation loop
+#     @inbounds for im in 1:Ncntry
+#         fill!(carry_prices, 0.0)  # Reset instead of allocating new array
+        
+#         # Vectorized operations where possible
+#         for gd in 1:Ngoods
+#             # Home country always included
+#             carry_prices[im, gd] = price_matrix[im, gd]
+            
+#             # Check export conditions for other countries
+#             for ex in 1:Ncntry
+#                 if ex != im
+#                     cif_price = d[im, ex] * price_matrix[ex, gd]
+#                     if cif_price <= markup_cutoff[im] && price_matrix[ex, gd] > 0
+#                         carry_prices[ex, gd] = cif_price
+#                     end
+#                 end
+                
+#                 # Compute trade shares and price aggregates
+#                 price = carry_prices[ex, gd]
+#                 if price > 0
+#                     price_power = price^one_minus_η
+#                     m[im, ex] += price_power
+#                     sum_price[im] += price_power
+#                 else
+#                     carry_prices[ex, gd] = NaN
+#                 end
+#             end
+#         end
+
+#         # Use view instead of copying
+#         @views final_price[im, :] .= vec(carry_prices)
+#     end
+
+#     # Normalize trade shares efficiently
+#     @inbounds for im in 1:Ncntry
+#         g_val = sum_price[im]
+#         if g_val > 0
+#             for ex in 1:Ncntry
+#                 m[im, ex] /= g_val
+#             end
+#         end
+#     end
+
+#     # Vectorized common_set computation
+#     common_set = [all(!isnan, @view final_price[:, gd]) for gd in 1:(Ncntry * Ngoods)]
+
+#     return m, final_price, common_set
+# end
