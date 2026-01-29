@@ -1,7 +1,7 @@
 include("gravity-tools.jl")
 include("trade-environment.jl")
-include("simmulate-eaton-kortum.jl")
-include("estimate-models.jl")
+include("simmulate-trade-models.jl")
+include("estimate-trade-models.jl")
 using CSV
 using DataFrames
 using Plots
@@ -13,26 +13,28 @@ using OptimizationPRIMA
 using LinearAlgebra
 ################################################################
 
-# year = ["2004", "2011", "2017"]
-year = ["2017"]
+year = ["2004", "2011", "2017"]
+#year = ["2017"]
 model = "krugman"
-Nruns = 12
-Nboots = 10
+Nruns = 36
+Nboots = 100
 Ngoods = 1000
+σ = 1.5
 
 dirname = "./data/"
+date = "12726"
 
 ##############################################################################################################################
 method = "over"
 
-dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
+dfout = estimate_all(year, σ, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
 
-# CSV.write("./results/krugman-estimate-"*method*".csv", dfout; writeheader = true)
+CSV.write("./results/"*model*"-estimate-"*method*"-"*date*".csv", dfout; writeheader = true)
 
-# ##############################################################################################################################
+##############################################################################################################################
 
-# method = "exact"
+method = "exact"
 
-# dfout = estimate_all(year, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
+dfout = estimate_all(year, σ, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
 
-# CSV.write("./results/krugman-estimate-"*method*".csv", dfout; writeheader = true)
+CSV.write("./results/"*model*"-estimate-"*method*"-"*date*".csv", dfout; writeheader = true)

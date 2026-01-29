@@ -342,7 +342,7 @@ function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
 
     p = SciMLBase.NullParameters()
 
-    println("value of σ: ", trade_parameters.σ)
+    # println("value of σ: ", trade_parameters.σ)
 
     f(x, p) = estimate_θ_dni(x[1], dfdni.dni, gravity_parameters, trade_parameters,
             gravity_results; model = model, display = display, return_moments = false, Nruns = Nruns, Nprices = Nprices, Ngoods = Ngoods)
