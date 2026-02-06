@@ -1,0 +1,16 @@
+θ,J,p10,p90,Jpercentile,model_moment_1,data_moment_1,model_moment_2,data_moment_2,model_moment_3,data_moment_3,model,method,year,source_file
+2.76,23.31,2.71,2.83,0.68,0.95,0.93,0.36,0.37,0.07,0.09,bejk,over,2004,bejk-estimate-over-12726.csv
+2.80,173.18,2.74,2.88,1.00,0.96,0.98,0.34,0.34,0.07,0.25,bejk,over,2011,bejk-estimate-over-12726.csv
+2.88,180.72,2.81,2.95,1.00,0.91,0.91,0.33,0.32,0.06,0.20,bejk,over,2017,bejk-estimate-over-12726.csv
+4.00,10.74,3.91,4.12,0.38,0.95,0.93,0.36,0.37,0.09,0.09,ek,over,2004,ek-estimate-over-12726.csv
+4.07,136.76,3.99,4.18,0.99,0.95,0.98,0.34,0.34,0.09,0.25,ek,over,2011,ek-estimate-over-12726.csv
+4.18,139.25,4.09,4.31,1.00,0.91,0.91,0.32,0.32,0.07,0.20,ek,over,2017,ek-estimate-over-12726.csv
+3.76,1390.47,3.56,3.92,1.00,1.28,0.93,0.25,0.37,0.23,0.09,krugman,over,2004,krugman-estimate-over-12726.csv
+3.49,983.90,3.34,3.60,1.00,1.38,0.98,0.25,0.34,0.23,0.25,krugman,over,2011,krugman-estimate-over-12726.csv
+3.82,1411.74,3.64,3.98,1.00,1.23,0.91,0.21,0.32,0.20,0.20,krugman,over,2017,krugman-estimate-over-12726.csv
+3.59,133.16,3.38,3.91,0.86,0.90,0.93,0.34,0.37,0.21,0.09,melitz,over,2004,melitz-estimate-over-12726.csv
+3.15,60.78,2.91,3.67,0.53,1.03,0.98,0.29,0.34,0.25,0.25,melitz,over,2011,melitz-estimate-over-12726.csv
+3.08,287.52,2.60,3.82,0.92,0.98,0.91,0.23,0.32,0.25,0.20,melitz,over,2017,melitz-estimate-over-12726.csv
+3.59,133.16,3.38,3.91,0.86,0.90,0.93,0.34,0.37,0.21,0.09,melitz,over,2004,melitz-estimate-over-12926-sigma-theta.csv
+3.15,60.78,2.91,3.67,0.53,1.03,0.98,0.29,0.34,0.25,0.25,melitz,over,2011,melitz-estimate-over-12926-sigma-theta.csv
+3.08,287.52,2.60,3.82,0.92,0.98,0.91,0.23,0.32,0.25,0.20,melitz,over,2017,melitz-estimate-over-12926-sigma-theta.csv
