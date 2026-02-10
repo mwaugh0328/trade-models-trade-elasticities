@@ -17,6 +17,7 @@ using Parameters
     Wguess::Array{Float64} = ones(length(S))
     Ncntry::Int64 = length(S)
     τ::Array{Float64} = zeros(length(T), length(T))
+    E::Array{Float64} = ones(length(S))
 end
 
 ##########################################################################

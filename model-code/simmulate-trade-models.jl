@@ -382,133 +382,87 @@ function sim_trade_pattern_krugman(S, d, θ; Ngoods = 10, code = 1)
 
 end
 
+function sim_trade_pattern_krugman_model2(trade_parameters; Ngoods = 10000, code = 1)
+    # multiple dispatch version of the sim_trade_pattern_krugman function
+
+    return sim_trade_pattern_krugman_model2(trade_parameters.S, trade_parameters.d,  trade_parameters.θ, trade_parameters.E; Ngoods = Ngoods, code = code)
+
+end
+
+function sim_trade_pattern_krugman_model2(S, d, θ, E; Ngoods = 10, code = 1)
+
+    # println("Simulating trade pattern for Krugman model 2 with E_i proportional to importer expenditure")
+
+    # println(size(E))
+
+    Ncntry = length(S)
+
+    η = θ + 1
+    markup = η / (η - 1)
+
+    m = zeros(Ncntry, Ncntry)
+
+    sum_price = zeros(Ncntry)
+
+    price_matrix = zeros(Ncntry, Ngoods)
+
+    final_price = zeros(Ncntry, Ncntry * Ngoods)
+
+    u = fill(0.5, Ngoods)
+
+    # Assign values in the price matrix
+    @inbounds @views Threads.@threads for j in 1:Ncntry
+        price_matrix[j, :] .= markup .* marginal_cost.(u, S[j], θ) 
+    end
+
+    @inbounds for im in 1:Ncntry
+
+        carry_prices = zeros(Ncntry, Ngoods)
+
+        @inbounds for gd in 1:Ngoods
+
+            @inbounds for ex in 1:Ncntry
+
+                carry_prices[ex, gd] = d[im, ex] * price_matrix[ex, gd]
+
+                # Weight by E[ex] for Model 2: M_i ∝ E_i
+                m[im, ex] += E[ex] * carry_prices[ex, gd]^(one(η) - η)
+
+                sum_price[im] += E[ex] * carry_prices[ex, gd]^(one(η) - η)
+
+            end
+
+        end
+
+        @views final_price[im, :] .= vec(carry_prices)
+    end
+
+    @inbounds for im in 1:Ncntry
+
+        g_val = sum_price[im]
+
+        @inbounds for ex in 1:Ncntry
+            m[im, ex] = m[im, ex] / g_val
+        end
+
+    end
+
+    # Sampling weights: goods from country ex appear with prob ∝ E[ex]
+    # vec(carry_prices) is column-major: [ex1_gd1, ex2_gd1, ..., exN_gd1, ex1_gd2, ...]
+    sampling_weights = repeat(E, outer = Ngoods)
+    
+    sampled_prices = sample(MersenneTwister(09111943 + code), 1:(Ncntry * Ngoods), 
+                            Weights(sampling_weights), Ngoods; replace=false)
+
+    rec_low_price = final_price[:, sampled_prices]
+
+    return m, rec_low_price
+
+end
+
 ##############################################################################################################################
 ##############################################################################################################################
 
-
-# function sim_trade_pattern_melitz(trade_parameters; Ngoods = 10000, code = 1)
-#     # multiple dispatch version of the sim_trade_pattern_krugman function
-
-#     return sim_trade_pattern_melitz(trade_parameters.S, trade_parameters.d,  trade_parameters.θ; Ngoods = Ngoods, code = code)
-
-# end
-
-# function sim_trade_pattern_melitz(S, d, θ; Ngoods = 10000, code = 1)
-
-#     Ncntry = length(S)
-    
-#     η = θ + 1
-
-#     markup = η / (η - 1)    
-
-#     # rng = MersenneTwister(03281978 + code)
-
-#     pi_nn = zeros(Ncntry)
-
-#     cost_cutoff = zeros(Ncntry)
-
-#     for j in 1:Ncntry
-        
-#         phi_sum = sum(S .* d[j, :].^(-θ))
-
-#         pi_nn[j] = S[j] / phi_sum
-        
-#         cost_cutoff[j] = (pi_nn[j] / S[j])^(1 / θ)
-#     end
-
-#     max_goods = maximum(pi_nn)
-
-#     m = zeros(Ncntry, Ncntry)
-
-#     sum_price = zeros(Ncntry)
-    
-#     price_matrix = zeros(Ncntry, Ngoods)
-
-#     # Assign values in the price matrix
-#     for j in 1:Ncntry
-
-#         cgoods = round(Int, Ngoods * (pi_nn[j] / max_goods))
-
-#         u = Array{Float64}(undef, cgoods)
-
-#         rand!(MersenneTwister(03281978 + code + j), u)
-
-#         u = pi_nn[j] .* u
-
-#         price_matrix[ j , 1:cgoods] .= markup .* (u ./ S[j]).^(1 / θ)
-#         # Optionally shuffle: price_matrix[:, jjj] = price_matrix[shuffle(rng, 1:Ngoods), jjj]
-#     end
-
-#     final_price = Array{Float64}(undef, Ncntry, Ncntry * Ngoods)
-
-#     common_set = falses(Ncntry * Ngoods)
-
-#     # Compute exporting decisions and trade shares
-
-    
-#    @inbounds for im in 1:Ncntry
-
-#         carry_prices = zeros(Ncntry, Ngoods)
-
-#         @inbounds for gd in 1:Ngoods
-
-#             @inbounds for ex in 1:Ncntry  
-            
-#                 if ex == im
-
-#                     carry_prices[ex, gd] = price_matrix[ex, gd]
-
-                
-#                 elseif d[im, ex] * price_matrix[ex, gd] <= markup * cost_cutoff[im]
-            
-
-#                     carry_prices[ex, gd] = d[im, ex] * price_matrix[ex, gd]
-
-#                 end
-
-#                 if carry_prices[ex, gd] != 0.0
-                   
-#                     m[im, ex] += carry_prices[ex, gd]^(one(η) - η)
-
-#                     sum_price[im] += carry_prices[ex, gd]^(one(η) - η)
-
-#                 else
-#                     carry_prices[ex, gd] = NaN
-
-#                 end
-
-#             end
-#         end
-
-#         @views final_price[im, :] .= vec(carry_prices)
-
-#     end
-
-#     for im in 1:Ncntry
-
-#         g_val = sum_price[im]
-
-#         for ex in 1:Ncntry
-
-#             m[im, ex] = ( m[im, ex] ) / g_val
-
-#         end
-
-#     end
-
-
-#     # Filter: keep only rows where all countries have a price (no NaN)
-#     common_set = [all(.!isnan.(final_price[:, gd])) for gd in 1:size(final_price, 2)]
-
-#     # final_price = final_price[:, common_set]
-
-#     # sampled_prices= sample(MersenneTwister(09111943 + code), 1:(Ncntry * Ngoods), Ngoods; replace=false)
-
-#     # rec_low_price = final_price[:, sampled_prices]
-#     # sample_common_set = common_set[sampled_prices]
-
-#     return m, final_price, common_set
-# end
 
 # Multiple dispatch version for optimized Melitz function
 function sim_trade_pattern_melitz_optimized(trade_parameters; Ngoods = 10000, code = 1)
@@ -581,7 +535,7 @@ function sim_trade_pattern_melitz_optimized(S, d, θ, σ; Ngoods = 10000, code =
     # =========================================================================
     # η = θ + 1 is the elasticity of substitution across varieties (CES parameter)
     # In Melitz-Chaney, θ (Pareto shape) and η are linked; this follows SW's notation
-    σ = θ + 1
+    # σ = θ + 1
     markup = σ / (σ - 1)        # CES markup: p = (η/(η-1)) ⋅ mc
     inv_θ = 1 / θ
     one_minus_σ = one(σ) - σ    # Exponent for CES price aggregation: p^(1-η)
@@ -757,97 +711,139 @@ function sim_trade_pattern_melitz_optimized(S, d, θ, σ; Ngoods = 10000, code =
     return m, final_price, common_set
 end
 
-# ##############################################################################################################################
-# OLD - commented out optimized version of Melitz function
- # Optimized version of sim_trade_pattern_melitz
-# function sim_trade_pattern_melitz_optimized(S, d, θ; Ngoods = 10000, code = 1)
+# Multiple dispatch version for optimized Melitz function
+function sim_trade_pattern_melitz_model2(trade_parameters; Ngoods = 10000, code = 1)
+    # multiple dispatch version of the sim_trade_pattern_melitz_optimized function
 
-#     Ncntry = length(S)
+    return sim_trade_pattern_melitz_model2(trade_parameters.S, trade_parameters.d, 
+    trade_parameters.θ, trade_parameters.σ, trade_parameters.E; Ngoods = Ngoods, code = code)
+
+end
+
+function sim_trade_pattern_melitz_model2(S, d, θ, σ, E; Ngoods = 10000, code = 1)
     
-#     η = θ + 1
-#     markup = η / (η - 1)    
-#     inv_θ = 1 / θ
-#     one_minus_η = one(η) - η
+    Ncntry = length(S)
+   
+    # =========================================================================
+    # Model Parameters
+    # =========================================================================
+    markup = σ / (σ - 1)
+    inv_θ = 1 / θ
+    one_minus_σ = one(σ) - σ
+    κ = θ / (σ - 1) - 1
+   
+    # =========================================================================
+    # Compute Domestic Shares and Cutoffs (Model 2)
+    # =========================================================================
+    phi_tilde_sum = [sum(S .* d[j, :].^(-θ)) for j in 1:Ncntry]
+   
+    pi_nn = S ./ phi_tilde_sum
+   
+    # Cost cutoff for Model 2 (equation 54)
+    cost_cutoff = (E.^inv_θ) .* (phi_tilde_sum.^(-inv_θ))
+   
+    # Normalize 
+    base_cutoff = (pi_nn ./ S).^inv_θ
+    cost_cutoff = cost_cutoff ./ minimum(cost_cutoff) .* minimum(base_cutoff)
+   
+    markup_cutoff = markup .* cost_cutoff
+   
+    # =========================================================================
+    # Initialize Storage
+    # =========================================================================
+    max_goods = maximum(pi_nn)
+    m = zeros(Ncntry, Ncntry)
+    sum_price = zeros(Ncntry)
+    price_matrix = zeros(Ncntry, Ngoods)
+   
+    # =========================================================================
+    # Generate Domestic Prices via Pareto Productivity Draws
+    # =========================================================================
+    for j in 1:Ncntry
+        cgoods = round(Int, Ngoods * (pi_nn[j] / max_goods))
+       
+        if cgoods > 0
+            u = rand(MersenneTwister(03281978 + code + j), cgoods)
+            u .*= pi_nn[j]
+            price_matrix[j, 1:cgoods] .= markup .* (u ./ S[j]).^inv_θ
+        end
+    end
+   
+    # =========================================================================
+    # Storage for Final Prices and Trade Computation
+    # =========================================================================
+    final_price = Array{Float64}(undef, Ncntry, Ncntry * Ngoods)
+    carry_prices = zeros(Ncntry, Ngoods)
+   
+    # =========================================================================
+    # Main Loop: Compute Trade Shares and Delivered Prices
+    # =========================================================================
+    @inbounds for im in 1:Ncntry
+        fill!(carry_prices, 0.0)
+       
+        for gd in 1:Ngoods
+            carry_prices[im, gd] = price_matrix[im, gd]
+           
+            for ex in 1:Ncntry
+                if ex != im
+                    cif_price = d[im, ex] * price_matrix[ex, gd]
+                   
+                    if cif_price <= markup_cutoff[im] && price_matrix[ex, gd] > 0
+                        carry_prices[ex, gd] = cif_price
+                    end
+                end
+            end
+           
+            # Weight by E[ex]^κ for Model 2 (from equation 56)
+            for ex in 1:Ncntry
+                price = carry_prices[ex, gd]
+               
+                if price > 0
+                    price_power = price^one_minus_σ
+                    m[im, ex] += E[ex]^κ * price_power
+                    sum_price[im] += E[ex]^κ * price_power
+                else
+                    carry_prices[ex, gd] = NaN
+                end
+            end
+        end
+       
+        @views final_price[im, :] .= vec(carry_prices)
+    end
+   
+    # =========================================================================
+    # Normalize Trade Shares
+    # =========================================================================
+    @inbounds for im in 1:Ncntry
+        g_val = sum_price[im]
+        if g_val > 0
+            for ex in 1:Ncntry
+                m[im, ex] /= g_val
+            end
+        end
+    end
+   
+    # =========================================================================
+    # Identify Common Set of Goods
+    # =========================================================================
+    common_set = Vector{Bool}(undef, Ncntry * Ngoods)
 
-#     # Vectorized computation of pi_nn and cost_cutoff
-#     phi_sum = [sum(S .* d[j, :].^(-θ)) for j in 1:Ncntry]
+    for gd in 1:(Ncntry * Ngoods)
+        prices_this_good = @view final_price[:, gd]
+        sold_everywhere = all(p -> !isnan(p), prices_this_good)
+        common_set[gd] = sold_everywhere
+    end
 
-#     pi_nn = S ./ phi_sum
-    
-#     cost_cutoff = (pi_nn ./ S).^inv_θ
-    
-#     markup_cutoff = markup .* cost_cutoff
+    common_indices = findall(common_set)
 
-#     max_goods = maximum(pi_nn)
+    # Each index maps to an exporter: ex = mod1(idx, Ncntry)
+    sampling_weights = [E[mod1(idx, Ncntry)]^κ for idx in common_indices]
 
-#     m = zeros(Ncntry, Ncntry)
+    sampled_prices = sample(MersenneTwister(09111943 + code), common_indices, 
+                        Weights(sampling_weights), Ngoods; replace=true)
 
-#     sum_price = zeros(Ncntry)
-    
-#     # Pre-allocate price matrix
-#     price_matrix = zeros(Ncntry, Ngoods)
+    rec_low_price = final_price[:, sampled_prices]
+   
+    return m, rec_low_price
+end
 
-#     # Vectorized price matrix assignment
-#     for j in 1:Ncntry
-#         cgoods = round(Int, Ngoods * (pi_nn[j] / max_goods))
-#         if cgoods > 0
-#             u = rand(MersenneTwister(03281978 + code + j), cgoods)
-#             u .*= pi_nn[j]
-#             price_matrix[j, 1:cgoods] .= markup .* (u ./ S[j]).^inv_θ
-#         end
-#     end
-
-#     final_price = Array{Float64}(undef, Ncntry, Ncntry * Ngoods)
-
-#     # Pre-allocate arrays
-#     carry_prices = zeros(Ncntry, Ngoods)
-    
-#     # Optimized main computation loop
-#     @inbounds for im in 1:Ncntry
-#         fill!(carry_prices, 0.0)  # Reset instead of allocating new array
-        
-#         # Vectorized operations where possible
-#         for gd in 1:Ngoods
-#             # Home country always included
-#             carry_prices[im, gd] = price_matrix[im, gd]
-            
-#             # Check export conditions for other countries
-#             for ex in 1:Ncntry
-#                 if ex != im
-#                     cif_price = d[im, ex] * price_matrix[ex, gd]
-#                     if cif_price <= markup_cutoff[im] && price_matrix[ex, gd] > 0
-#                         carry_prices[ex, gd] = cif_price
-#                     end
-#                 end
-                
-#                 # Compute trade shares and price aggregates
-#                 price = carry_prices[ex, gd]
-#                 if price > 0
-#                     price_power = price^one_minus_η
-#                     m[im, ex] += price_power
-#                     sum_price[im] += price_power
-#                 else
-#                     carry_prices[ex, gd] = NaN
-#                 end
-#             end
-#         end
-
-#         # Use view instead of copying
-#         @views final_price[im, :] .= vec(carry_prices)
-#     end
-
-#     # Normalize trade shares efficiently
-#     @inbounds for im in 1:Ncntry
-#         g_val = sum_price[im]
-#         if g_val > 0
-#             for ex in 1:Ncntry
-#                 m[im, ex] /= g_val
-#             end
-#         end
-#     end
-
-#     # Vectorized common_set computation
-#     common_set = [all(!isnan, @view final_price[:, gd]) for gd in 1:(Ncntry * Ngoods)]
-
-#     return m, final_price, common_set
-# end

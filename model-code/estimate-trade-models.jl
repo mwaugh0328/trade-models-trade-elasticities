@@ -101,7 +101,9 @@ function estimate_all(years, σ, model, method, Nruns, Nboots, directory; Ngoods
 
         make_technology!(grvdata, T, W, grv_params)
 
-        trd_prm = trade_params(θ = grv_params.θ, σ = σ, d = d, S = exp.(grvdata.S), Ncntry = grv_params.Ncntry, N = grv_params.L)
+        E = get_E_by_importer(df)
+
+        trd_prm = trade_params(θ = grv_params.θ, σ = σ, d = d, S = exp.(grvdata.S), Ncntry = grv_params.Ncntry, N = grv_params.L, E = E)
 
     # # ################################################################
     # # # Now simmulate the EK model
@@ -337,7 +339,7 @@ end
 function estimate_θ_dni(dfdni, gravity_parameters, trade_parameters,
             gravity_results; model = "ek", method = "exact", Wmat = "optimal", display = true, Nruns = 10, Nprices = 70, Ngoods = 100000)
 
-    lb = [2.5,]
+    lb = [1.5,]
     ub = [10.0,]
 
     p = SciMLBase.NullParameters()
@@ -636,6 +638,11 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
         # print("this is the Krugman model")
         πshares, prices = sim_trade_pattern_krugman(trade_parameters; Ngoods = Ngoods, code = code)
 
+    elseif model == "krugman-model2"
+
+        πshares, prices = sim_trade_pattern_krugman_model2(trade_parameters; Ngoods = Ngoods, code = code)
+
+
     elseif model == "melitz"
         # print("this is the Melitz model")
         prices = Array{Float64}(undef, length(Ncntry), Ngoods*Ncntry)
@@ -646,8 +653,16 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
 
         num_prices = size(prices[:,common_set],2)
 
+    elseif model == "melitz-model2"
+
+        πshares, prices = sim_trade_pattern_melitz_model2(trade_parameters; Ngoods = Ngoods, code = code)
+
+        num_prices = size(prices, 2)
+
+
     else
-        error("Model not recognized. Use 'ek' or 'bejk' or 'krugman'.")
+        error("Model not recognized. Use 'ek' or 'bejk' or 'krugman' or 'krugman-model2' or 'melitz'.")
+        
     end
 
     # print(size(prices))
@@ -662,6 +677,12 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
 
         prices = prices[:,common_set]
 
+        sampled_prices= sample(MersenneTwister(09212013 + code), 1:num_prices, Nprices; replace=false)
+
+        pmat = prices[:, sampled_prices]
+
+    elseif model == "melitz-model2"
+        
         sampled_prices= sample(MersenneTwister(09212013 + code), 1:num_prices, Nprices; replace=false)
 
         pmat = prices[:, sampled_prices]
@@ -709,6 +730,16 @@ end
 ##############################################################################################################################
 ##############################################################################################################################
 
+function get_E_by_importer(df)
+    # Get the importer column name (could be "importer" or "iso_d")
+    imp_col = "iso_d" in names(df) ? :iso_d : :importer
+    
+    # Group by importer and take the first E_importer for each
+    grp = groupby(df, imp_col)
+    return [first(g.E_importer) for g in grp]
+end
+
+
 function generate_simmulated_data(θ, σν, tradedata, trade_parameters, gravity_parameters; model = "ek", code = 1, Nprices = 70, Ngoods = 100000)
     # A function to simmulate a pattern of trade and then generate a
     # random sample of final goods prices, then compute the moments
@@ -727,7 +758,7 @@ function generate_simmulated_data(θ, σν, tradedata, trade_parameters, gravity
 
     make_technology!(grvity_results, T, W, foo_gravity_parameters)
 
-    foo_trade_parameters= trade_params(θ = θ, σ = trade_parameters.σ, d = d, S = exp.(grvity_results.S), Ncntry = foo_gravity_parameters.Ncntry, N = foo_gravity_parameters.L)
+    foo_trade_parameters= trade_params(θ = θ, σ = trade_parameters.σ, d = d, S = exp.(grvity_results.S), Ncntry = foo_gravity_parameters.Ncntry, N = foo_gravity_parameters.L, E = trade_parameters.E)
 
     πshares = Array{Float64}(undef, length(Ncntry), length(Ncntry))
 
@@ -745,6 +776,11 @@ function generate_simmulated_data(θ, σν, tradedata, trade_parameters, gravity
     elseif model == "krugman"
         # print("this is the Krugman model")
         πshares, prices = sim_trade_pattern_krugman(foo_trade_parameters; Ngoods = Ngoods, code = code)
+
+    elseif model == "krugman-model2"
+        # print("this is the Krugman model with variable markups")
+        πshares, prices = sim_trade_pattern_krugman_model2(foo_trade_parameters; Ngoods = Ngoods, code = code)
+
     elseif model == "melitz"
         # print("this is the Melitz model")
         prices = Array{Float64}(undef, length(Ncntry), Ngoods*Ncntry)
@@ -754,6 +790,13 @@ function generate_simmulated_data(θ, σν, tradedata, trade_parameters, gravity
         πshares, prices, common_set = sim_trade_pattern_melitz_optimized(foo_trade_parameters; Ngoods = Ngoods, code = code)
 
         num_prices = size(prices[:,common_set],2)
+
+    elseif model == "melitz-model2"
+
+        # print("this is the Krugman model with variable markups")
+        πshares, prices = sim_trade_pattern_melitz_model2(foo_trade_parameters; Ngoods = Ngoods, code = code)
+
+        num_prices = size(prices, 2)
 
     else
         error("Model not recognized. Use 'ek' or 'bejk' or 'krugman'.")
@@ -770,6 +813,12 @@ function generate_simmulated_data(θ, σν, tradedata, trade_parameters, gravity
     elseif model == "melitz"
 
         prices = prices[:,common_set]
+
+        sampled_prices= sample(MersenneTwister(09212013 + code), 1:num_prices, Nprices; replace=false)
+
+        pmat = prices[:, sampled_prices]
+
+    elseif model == "melitz-model2"
 
         sampled_prices= sample(MersenneTwister(09212013 + code), 1:num_prices, Nprices; replace=false)
 
