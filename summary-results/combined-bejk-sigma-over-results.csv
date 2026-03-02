@@ -1,0 +1,16 @@
+θ,J,p10,p90,Jpercentile,model_moment,data_moment,model,method,year,source_file,sigma,identification,model_moment_1,data_moment_1,model_moment_2,data_moment_2,model_moment_3,data_moment_3
+2.76,23.31,2.71,2.83,0.68,,,bejk,over,2004,bejk-estimate-over-21126-sigma15.csv,1.50,over,0.95,0.93,0.36,0.37,0.07,0.09
+2.80,173.18,2.74,2.88,1.00,,,bejk,over,2011,bejk-estimate-over-21126-sigma15.csv,1.50,over,0.96,0.98,0.34,0.34,0.07,0.25
+2.88,180.72,2.81,2.95,1.00,,,bejk,over,2017,bejk-estimate-over-21126-sigma15.csv,1.50,over,0.91,0.91,0.33,0.32,0.06,0.20
+2.96,61.60,2.91,3.03,0.97,,,bejk,over,2004,bejk-estimate-over-21126-sigma20.csv,2.00,over,0.97,0.93,0.36,0.37,0.09,0.09
+2.97,180.05,2.92,3.05,1.00,,,bejk,over,2011,bejk-estimate-over-21126-sigma20.csv,2.00,over,0.99,0.98,0.34,0.34,0.08,0.25
+3.07,174.31,3.00,3.14,1.00,,,bejk,over,2017,bejk-estimate-over-21126-sigma20.csv,2.00,over,0.93,0.91,0.32,0.32,0.07,0.20
+3.13,86.32,3.08,3.20,1.00,,,bejk,over,2004,bejk-estimate-over-21126-sigma25.csv,2.50,over,0.98,0.93,0.35,0.37,0.09,0.09
+3.13,192.50,3.07,3.21,1.00,,,bejk,over,2011,bejk-estimate-over-21126-sigma25.csv,2.50,over,1.00,0.98,0.34,0.34,0.09,0.25
+3.24,183.88,3.18,3.32,1.00,,,bejk,over,2017,bejk-estimate-over-21126-sigma25.csv,2.50,over,0.94,0.91,0.32,0.32,0.07,0.20
+3.13,86.32,3.08,3.20,1.00,,,bejk,over,2004,bejk-estimate-over-2626-sigma25.csv,2.50,over,0.98,0.93,0.35,0.37,0.09,0.09
+3.13,192.50,3.07,3.21,1.00,,,bejk,over,2011,bejk-estimate-over-2626-sigma25.csv,2.50,over,1.00,0.98,0.34,0.34,0.09,0.25
+3.24,183.88,3.18,3.32,1.00,,,bejk,over,2017,bejk-estimate-over-2626-sigma25.csv,2.50,over,0.94,0.91,0.32,0.32,0.07,0.20
+3.26,93.28,3.21,3.34,0.99,,,bejk,over,2004,bejk-estimate-over-21126-sigma30.csv,3.00,over,0.98,0.93,0.35,0.37,0.09,0.09
+3.25,195.11,3.19,3.34,0.99,,,bejk,over,2011,bejk-estimate-over-21126-sigma30.csv,3.00,over,1.01,0.98,0.34,0.34,0.09,0.25
+3.37,189.48,3.31,3.45,1.00,,,bejk,over,2017,bejk-estimate-over-21126-sigma30.csv,3.00,over,0.95,0.91,0.32,0.32,0.08,0.20

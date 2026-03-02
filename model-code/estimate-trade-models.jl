@@ -843,7 +843,7 @@ function boot_strap_simulation(θ, σν, tradedata, trade_parameters, gravity_pa
     # A function to run a boot strap simulation to get the distribution of the θ estimator
     # the function returns the θ estimates and the value of the J-Stats
     
-    lb = [2.5,]
+    lb = [1.25,]
     ub = [10.0,]
 
     p = SciMLBase.NullParameters()

@@ -3,11 +3,8 @@
 2.82,0.00,2.73,2.93,0.14,0.93,0.93,bejk,exact,2004,bejk-estimate-exact-12726.csv
 2.87,0.00,2.76,3.00,0.69,0.91,0.91,bejk,exact,2017,bejk-estimate-exact-12726.csv
 3.30,0.00,3.10,3.83,0.02,0.98,0.98,melitz,exact,2011,melitz-estimate-exact-12726.csv
-3.30,0.00,3.10,3.83,0.02,0.98,0.98,melitz,exact,2011,melitz-estimate-exact-12926-sigma-theta.csv
-3.32,0.00,2.83,3.73,0.27,0.91,0.91,melitz,exact,2017,melitz-estimate-exact-12926-sigma-theta.csv
 3.32,0.00,2.83,3.73,0.15,0.91,0.91,melitz,exact,2017,melitz-estimate-exact-12726.csv
 3.50,0.00,3.06,3.90,0.19,0.93,0.93,melitz,exact,2004,melitz-estimate-exact-12726.csv
-3.50,0.00,3.06,3.90,0.14,0.93,0.93,melitz,exact,2004,melitz-estimate-exact-12926-sigma-theta.csv
 3.94,0.00,3.81,4.08,0.80,0.98,0.98,ek,exact,2011,ek-estimate-exact-12726.csv
 4.09,0.00,3.92,4.23,0.98,0.93,0.93,ek,exact,2004,ek-estimate-exact-12726.csv
 4.19,0.00,4.05,4.34,0.34,0.91,0.91,ek,exact,2017,ek-estimate-exact-12726.csv

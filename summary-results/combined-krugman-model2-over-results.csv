@@ -1,0 +1,4 @@
+θ,J,p10,p90,Jpercentile,model_moment_1,data_moment_1,model_moment_2,data_moment_2,model_moment_3,data_moment_3,model,method,year
+3.72,122.12,3.55,3.93,0.89,0.92,0.93,0.34,0.37,0.21,0.09,krugman-model2,over,2004
+3.39,45.51,3.03,3.57,0.42,1.05,0.98,0.31,0.34,0.25,0.25,krugman-model2,over,2011
+3.51,45.42,3.23,4.02,0.36,0.95,0.91,0.28,0.32,0.22,0.20,krugman-model2,over,2017
