@@ -70,7 +70,7 @@ The estimation matches simulated moments (price gaps) to data moments via GMM.
 - **Productivity**: Same Fréchet draws as EK. Each country draws *two* independent productivities per good: a first-best and a second-best. The second-best draw is conditional on being worse than the first: $c_2 = (\log u_2 / (-S_i) + c_1^{\theta})^{1/\theta}$.
 - **Pricing rule**: The winning firm charges:
 
-$$p = \min\!\big(d_{ni^*} \cdot c_{2,i^*},\;\; \min_{j \neq i^*} d_{n,j} \cdot c_{1,j},\;\; \tfrac{\sigma}{\sigma-1} \cdot d_{ni^*} \cdot c_{1,i^*}\big)$$
+$$p = \min\left(d_{ni^{*}} \cdot c_{2,i^{*}},\ \min_{j \neq i^{*}} d_{n,j} \cdot c_{1,j},\ \frac{\sigma}{\sigma-1} \cdot d_{ni^{*}} \cdot c_{1,i^{*}}\right)$$
 
 where $i^*$ is the lowest-cost international supplier. The price is the minimum of: (a) the second-best domestic draw (times trade cost), (b) the best foreign competitor's delivered cost, or (c) the monopoly markup.
 
