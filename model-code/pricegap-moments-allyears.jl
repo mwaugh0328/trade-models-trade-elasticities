@@ -1,6 +1,6 @@
 include("gravity-tools.jl")
 include("trade-environment.jl")
-include("simmulate-eaton-kortum.jl")
+include("simulate-trade-models.jl")
 using CSV
 using DataFrames
 using Plots

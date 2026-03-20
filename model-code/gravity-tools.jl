@@ -277,7 +277,7 @@ end
 ##########################################################################
 
 function gravity(tradedata, σν; code = 1, trade_cost_type = "ek", display = false)
-    #function to create simmulated gravity_results
+    #function to create simulated gravity_results
 
 
     # first run the regression

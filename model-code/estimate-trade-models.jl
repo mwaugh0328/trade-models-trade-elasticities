@@ -106,7 +106,7 @@ function estimate_all(years, σ, model, method, Nruns, Nboots, directory; Ngoods
         trd_prm = trade_params(θ = grv_params.θ, σ = σ, d = d, S = exp.(grvdata.S), Ncntry = grv_params.Ncntry, N = grv_params.L, E = E)
 
     # # ################################################################
-    # # # Now simmulate the EK model
+    # # # Now simulate the EK model
 
         @time θest, Jstat, model_moments, data_moments =  estimate_θ_dni(df, grv_params, trd_prm,  grvdata; 
             model = model, method = method, Wmat = "optimal", display = false, Nruns = Nruns, Nprices = Nprices, Ngoods = Ngoods)
@@ -616,7 +616,7 @@ end
 ##############################################################################################################################
 
 function generate_moments(trade_parameters; model = "ek", method = "over", code = 1, Nprices = 70, Ngoods = 100000)
-    # A function to simmulate a pattern of trade and then generate a 
+    # A function to simulate a pattern of trade and then generate a 
     # random sample of final goods prices, then compute the moments
 
     @unpack Ncntry = trade_parameters
@@ -667,13 +667,7 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
 
     # print(size(prices))
 
-    if model != "melitz"
-        
-        sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
-
-        pmat = prices[:, sampled_prices]
-
-    elseif model == "melitz"
+    if model == "melitz"
 
         prices = prices[:,common_set]
 
@@ -684,6 +678,12 @@ function generate_moments(trade_parameters; model = "ek", method = "over", code 
     elseif model == "melitz-model2"
         
         sampled_prices= sample(MersenneTwister(09212013 + code), 1:num_prices, Nprices; replace=false)
+
+        pmat = prices[:, sampled_prices]
+
+    else
+        
+        sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
 
         pmat = prices[:, sampled_prices]
 
@@ -740,8 +740,8 @@ function get_E_by_importer(df)
 end
 
 
-function generate_simmulated_data(θ, σν, tradedata, trade_parameters, gravity_parameters; model = "ek", code = 1, Nprices = 70, Ngoods = 100000)
-    # A function to simmulate a pattern of trade and then generate a
+function generate_simulated_data(θ, σν, tradedata, trade_parameters, gravity_parameters; model = "ek", code = 1, Nprices = 70, Ngoods = 100000)
+    # A function to simulate a pattern of trade and then generate a
     # random sample of final goods prices, then compute the moments
 
     @unpack Ncntry = gravity_parameters
@@ -804,13 +804,7 @@ function generate_simmulated_data(θ, σν, tradedata, trade_parameters, gravity
 
     # print(size(prices))
 
-    if model != "melitz"
-        
-        sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
-
-        pmat = prices[:, sampled_prices]
-
-    elseif model == "melitz"
+    if model == "melitz"
 
         prices = prices[:,common_set]
 
@@ -821,6 +815,12 @@ function generate_simmulated_data(θ, σν, tradedata, trade_parameters, gravity
     elseif model == "melitz-model2"
 
         sampled_prices= sample(MersenneTwister(09212013 + code), 1:num_prices, Nprices; replace=false)
+
+        pmat = prices[:, sampled_prices]
+
+    else
+        
+        sampled_prices= sample(MersenneTwister(09212013 + code), 1:Ngoods, Nprices; replace=false)
 
         pmat = prices[:, sampled_prices]
 
@@ -853,7 +853,7 @@ function boot_strap_simulation(θ, σν, tradedata, trade_parameters, gravity_pa
 
     for xxx = 1:Nboots
 
-        sim_df, foo_trade_parameters, gravity_results = generate_simmulated_data(θ, σν, tradedata, trade_parameters, gravity_parameters; 
+        sim_df, foo_trade_parameters, gravity_results = generate_simulated_data(θ, σν, tradedata, trade_parameters, gravity_parameters; 
                 model = model, code = code + xxx, Nprices = Nprices, Ngoods = Ngoods)
 
         f(x, p) = estimate_θ_dni(x[1], sim_df.dni, gravity_parameters, foo_trade_parameters,

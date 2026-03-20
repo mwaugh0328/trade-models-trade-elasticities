@@ -20,7 +20,7 @@ function sim_trade_pattern_ek(S, d,  θ, σ; Ngoods = 100000, code = 1)
     # distributed productivity shocks. The function returns the trade shares and the
     # lowest price of each good in each country.
     #
-    # S are parameters from gravity equation and are sufficient to simmulate marginal costs
+    # S are parameters from gravity equation and are sufficient to simulate marginal costs
     # d is the trade costs matrix with rows being imports, columns being exports
     # θ is the Frechet shape parameter
     # σ is the elasticity of substitution
@@ -168,7 +168,7 @@ end
 ###############################################################
 
 function sim_trade_pattern_bejk(S, d, θ, σ; Ngoods = 100000, code = 1)
-    # A function to simmulate a pattern of trade and then generate a trade
+    # A function to simulate a pattern of trade and then generate a trade
     # share matrix and a random sample of final goods prices given bertrand
     # pricing from BEJK (2003). 
 

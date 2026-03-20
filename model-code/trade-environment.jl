@@ -104,12 +104,18 @@ end
 ##########################################################################
 ##########################################################################
 
+# NOTE: trade_equilibrium with tariffs is not currently used in the estimation pipeline.
+# The function average_trade_pattern (called below) is not implemented.
+# This code is retained for potential future tariff counterfactual analysis.
+
 function trade_equilibrium(w, τrev, trade_parameters; display = false)
     # constructs zero function, takes wages, demand, tariff revenue
-    # returns diffrence between procution and demand and guessed tariff transfer
-    # and relized tariff transfer
+    # returns difference between production and demand and guessed tariff transfer
+    # and realized tariff transfer
     #
     # If output = "all" then returns all trade statistics
+    #
+    # WARNING: Requires average_trade_pattern() to be implemented before use.
 
     @assert length(w) == length(τrev)
 
