@@ -106,9 +106,11 @@ Incorporates asymmetric country size (number of varieties proportional to expend
 
 | Year | θ | (p10–p90) |
 |------|-----|--------|
-| 2017 | 3.65 | 3.76 – 3.81 |
+| 2004 | 3.68 | 3.28 – 4.04 |
+| 2011 | 3.62 | 3.31 – 4.12 |
+| 2017 | 3.65 | 3.25 – 4.06 |
 
-**Key takeaway**: Model 2 substantially lowers θ compared to baseline Krugman (from ~5.0 to ~3.5) and dramatically improves moment fit (J drops from ~1000 to ~50-120). Accounting for country size effects matters significantly for the Krugman framework.
+**Key takeaway**: Model 2 substantially lowers θ compared to baseline Krugman (from ~5.0 to ~3.5–3.7) and dramatically improves moment fit (J drops from ~1000 to ~50-120). Accounting for country size effects matters significantly for the Krugman framework.
 
 ---
 
