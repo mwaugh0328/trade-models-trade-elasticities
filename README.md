@@ -4,6 +4,8 @@ Repository for **"Trade Models, Trade Elasticities, and the Gains from Trade"** 
 
 This codebase estimates the trade elasticity (θ) — a key parameter governing the gains from trade — under four different structural trade models using international price gap data and bilateral trade flows. The key insight is that different trade models imply different mappings from θ to observable price gaps, so the same data yields different estimates depending on the assumed model.
 
+For a detailed description of the economic environment and simulation structure of each model, see [model-description.md](model-description.md).
+
 ## Models
 
 | Model | Key Feature | Trade Elasticity |
