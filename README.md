@@ -57,6 +57,8 @@ Each model also has a "Model 2" variant (Krugman-model2, Melitz-model2) that inc
 │   ├── combined-melitz-model2-sigma-*.csv   # Melitz Model 2 sensitivity to σ
 │   ├── combined-krugman-model2-*.csv        # Krugman Model 2 results
 │   ├── estimation-results-summary.md        # Tabular summary of all results
+│   ├── pricegap-moments-analysis.md         # Discussion of price gap data properties
+│   ├── pricegap-moments-analysis.ipynb      # Notebook: correlations and regressions on price gaps
 │   └── combine-results.ipynb               # Notebook that aggregates result CSVs
 │
 └── slides/                # Presentation materials
@@ -72,7 +74,7 @@ The pipeline constructs two key objects for each year (2004, 2011, 2017):
 
 - **Trade shares** (`π_ni`): Bilateral trade flows (Feenstra for 2004/2011, BACI for 2017) divided by total absorption (gross output + imports - exports) give expenditure shares.
 
-The sample consists of the 30 largest manufacturing economies.
+The sample consists of the 30 largest manufacturing economies. For full details on the data pipeline, sources, and cleaning steps, see the [build-data-code README](build-data-code/README.md).
 
 ### Step 2: Gravity Estimation (`gravity-tools.jl`)
 
@@ -133,7 +135,7 @@ include("run-estimation-all-models.jl")
 
 ### Finding Results
 
-Results are saved to `results/` as individual CSV files named `{model}-estimate-{method}-{date}.csv`. The `summary-results/combine-results.ipynb` notebook aggregates these into combined files. See `summary-results/estimation-results-summary.md` for a tabular overview of all estimates organized by model and year.
+Results are saved to `results/` as individual CSV files named `{model}-estimate-{method}-{date}.csv`. The `summary-results/combine-results.ipynb` notebook aggregates these into combined files. See [`summary-results/estimation-results-summary.md`](summary-results/estimation-results-summary.md) for a tabular overview of all estimates organized by model and year. For an analysis of the price gap data properties — including correlations with gravity variables and regression diagnostics — see the [price gap moments analysis](summary-results/pricegap-moments-analysis.md).
 
 ### Key Output Columns
 
