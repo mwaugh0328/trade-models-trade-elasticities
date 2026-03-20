@@ -10,27 +10,27 @@ This document describes the economic environment and simulation structure for ea
 
 All models take as inputs:
 
-- **$S_i$** (technology): Country-specific productivity parameters recovered from the gravity regression's exporter fixed effects. Formally, $S_i = \exp(\hat{\alpha}_i^{\text{exporter}})$ where $\hat{\alpha}_i$ is the estimated exporter fixed effect.
+- **$S_i$** (technology): Country-specific productivity parameters recovered from the gravity regression's exporter fixed effects. Formally, $S_i = \exp(\hat{\alpha}_i^{\mathrm{exporter}})$ where $\hat{\alpha}_i$ is the estimated exporter fixed effect.
 - **$d_{ni}$** (trade costs): Bilateral iceberg trade costs constructed from the gravity regression. For country $n$ importing from $i$:
 
-$$d_{ni} = \exp\!\Big(-\tfrac{1}{\theta}\big[\hat{\delta}(\text{dist}_{ni}) + \hat{\gamma} \cdot \text{border}_{ni} + \hat{\theta}_{m,n}\big]\Big)$$
+$$d_{ni} = \exp\left(-\frac{1}{\theta}\left[\hat{\delta}(\mathrm{dist}_{ni}) + \hat{\gamma} \cdot \mathrm{border}_{ni} + \hat{\theta}_{m,n}\right]\right)$$
 
 where $\hat{\delta}(\cdot)$ are distance-bin coefficients, $\hat{\gamma}$ is the border effect, and $\hat{\theta}_{m,n}$ is an importer-specific asymmetric trade cost (following Eaton–Kortum's normalization). Trade costs are floored at 1.
 
 - **$\theta$** (trade elasticity): The parameter being estimated. It governs the dispersion of productivity draws (Fréchet shape in EK/BEJK, Pareto shape in Melitz) or the demand elasticity (Krugman).
-- **$\sigma$** (elasticity of substitution): Relevant for BEJK and Melitz models. Baseline value is 1.5; sensitivity analysis explores $\sigma \in \{1.5, 2.0, 2.5, 3.0\}$.
+- **$\sigma$** (elasticity of substitution): Relevant for BEJK and Melitz models. Baseline value is 1.5; sensitivity analysis explores $\sigma \in \lbrace 1.5, 2.0, 2.5, 3.0 \rbrace$.
 
 ### Gravity Equation
 
 The gravity regression takes the trade-share form from Eaton and Kortum (2002):
 
-$$\log\!\Big(\frac{\pi_{ni}}{\pi_{nn}}\Big) = \alpha_i^{\text{exp}} - \alpha_n^{\text{imp}} + \delta(\text{dist}_{ni}) + \gamma \cdot \text{border}_{ni} + \varepsilon_{ni}$$
+$$\log\left(\frac{\pi_{ni}}{\pi_{nn}}\right) = \alpha_i^{\mathrm{exp}} - \alpha_n^{\mathrm{imp}} + \delta(\mathrm{dist}_{ni}) + \gamma \cdot \mathrm{border}_{ni} + \varepsilon_{ni}$$
 
 with six distance bins (0–375, 375–750, 750–1500, 1500–3000, 3000–6000, 6000+ miles). The exporter fixed effects yield $S_i$, the importer fixed effects yield asymmetric trade costs $\theta_{m,n}$, and the bilateral variables determine $d_{ni}$.
 
 ### Simulation Approach
 
-Each model simulates a large number of goods ($N = 100{,}000$–$150{,}000$) and computes:
+Each model simulates a large number of goods ( $N = 100,\!000$ – $150,\!000$ ) and computes:
 1. **Trade shares** $\pi_{ni}$: fraction of country $n$'s expenditure on goods from country $i$.
 2. **Prices**: good-level prices observed in each country, used to construct the price gap moments $d_{ni}$ and $d_{ni2}$.
 
@@ -43,14 +43,14 @@ The estimation matches simulated moments (price gaps) to data moments via GMM.
 ### Economic Environment
 
 - **Market structure**: Perfect competition. Each good is produced by a single country — whichever has the lowest delivered cost.
-- **Productivity**: Country $i$'s unit cost for good $g$ is drawn from a Fréchet distribution: $\Pr(z_{ig} \leq z) = \exp(-S_i \cdot z^{-\theta})$. Higher $S_i$ means country $i$ is more likely to draw low costs.
+- **Productivity**: Country $i$'s unit cost for good $g$ is drawn from a Fréchet distribution: $\Pr(z_{ig} \le z) = \exp(-S_i \cdot z^{-\theta})$. Higher $S_i$ means country $i$ is more likely to draw low costs.
 - **Trade**: Country $n$ buys good $g$ from whichever source $i$ offers the lowest CIF price $p_{nig} = d_{ni} \cdot c_{ig}$. There is no markup — prices equal marginal cost.
 - **Price aggregation**: The CES price index uses $p^{1-\sigma}$ weighting, but since pricing is competitive, $\sigma$ only affects the price index, not the trade pattern.
 
 ### Simulation
 
 1. Draw $N$ independent uniform random variables per country; transform via $c = (\log u / (-S_i))^{1/\theta}$ to get Fréchet-distributed marginal costs.
-2. For each good, find the minimum CIF price across all exporters: $p_{ng} = \min_i \{d_{ni} \cdot c_{ig}\}$.
+2. For each good, find the minimum CIF price across all exporters: $p_{ng} = \min_{i} \lbrace d_{ni} \cdot c_{ig} \rbrace$.
 3. Assign trade to the lowest-cost supplier; aggregate using CES weights $p^{1-\sigma}$.
 4. All goods exist in all countries → no common-set selection needed.
 
@@ -100,14 +100,14 @@ where $i^*$ is the lowest-cost international supplier. The price is the minimum 
 - **Productivity**: Unlike EK/BEJK, there are no productivity draws across goods within a country. All firms in country $i$ have the same unit cost $c_i = (\log(0.5)/(-S_i))^{1/\theta}$ (a degenerate draw at the median).
 - **Number of varieties**: Each country produces $N$ varieties (symmetric across countries). All varieties from all countries are consumed everywhere.
 - **Demand elasticity**: $\eta = \theta + 1$. The markup is $\eta/(\eta-1) = (\theta+1)/\theta$.
-- **Pricing**: The delivered price of any variety from $i$ in market $n$ is $p_{ni} = d_{ni} \cdot \frac{\eta}{\eta-1} \cdot c_i$.
+- **Pricing**: The delivered price of any variety from $i$ in market $n$ is $p_{ni} = d_{ni} \cdot \eta/(\eta-1) \cdot c_i$.
 
 ### Simulation
 
 1. All firms in country $i$ produce at the same cost (no heterogeneity within country).
 2. Every variety is available in every market at price = trade cost × markup × unit cost.
 3. Trade shares are CES aggregates: $\pi_{ni} \propto N \cdot (d_{ni} \cdot c_i)^{1-\eta}$.
-4. Prices are sampled uniformly across the $N_{\text{cntry}} \times N_{\text{goods}}$ varieties.
+4. Prices are sampled uniformly across the $N_{\mathrm{cntry}} \times N_{\mathrm{goods}}$ varieties.
 
 ### Key Properties
 
@@ -123,7 +123,7 @@ where $i^*$ is the lowest-cost international supplier. The price is the minimum 
 ### Economic Environment
 
 - **Market structure**: Monopolistic competition with heterogeneous firms and export selection. Firms must pay a fixed cost to export; only the most productive survive.
-- **Productivity**: Firm productivity $\varphi$ follows a Pareto distribution with shape parameter $\theta$: $\Pr(\varphi \geq x) = (x/\varphi^*)^{-\theta}$, conditional on entry. Higher $\theta$ means less dispersion (more firms near the cutoff).
+- **Productivity**: Firm productivity $\varphi$ follows a Pareto distribution with shape parameter $\theta$: $\Pr(\varphi \ge x) = (x/\varphi^{*})^{-\theta}$, conditional on entry. Higher $\theta$ means less dispersion (more firms near the cutoff).
 - **Entry and selection**: A firm from country $i$ with marginal cost $c$ can sell in market $n$ only if its delivered price $d_{ni} \cdot p_i(c)$ clears market $n$'s cost cutoff $\bar{c}_n$:
 
 $$d_{ni} \cdot \frac{\sigma}{\sigma-1} \cdot c \leq \frac{\sigma}{\sigma-1} \cdot \bar{c}_n$$
@@ -182,9 +182,9 @@ The differences are:
 
 1. **Cost cutoff**: Incorporates expenditure:
 
-$$\bar{c}_j = E_j^{1/\theta} \cdot \tilde{\Phi}_j^{-1/\theta}$$
+$$\bar{c}_j = E_j^{1/\theta} \cdot \widetilde{\Phi}_j^{-1/\theta}$$
 
-where $\tilde{\Phi}_j = \sum_k S_k \cdot d_{jk}^{-\theta}$ (same multilateral resistance term). Larger markets have higher cutoffs, allowing more varieties to survive. Referenced as "equation 54" in the code.
+where $\widetilde{\Phi}_j = \sum_{k} S_k \cdot d_{jk}^{-\theta}$ (same multilateral resistance term). Larger markets have higher cutoffs, allowing more varieties to survive. Referenced as "equation 54" in the code.
 
 2. **Trade share weighting**: Each exporter's contribution is weighted by $E_i^{\kappa}$ where:
 
@@ -208,7 +208,7 @@ Melitz Model 2 produces the **lowest $\theta$ estimates** of any specification, 
 
 The models form a consistent ordering in $\theta$ estimates:
 
-$$\theta_{\text{BEJK}} < \theta_{\text{Melitz}} < \theta_{\text{EK}} < \theta_{\text{Krugman}}$$
+$$\theta_{\mathrm{BEJK}} < \theta_{\mathrm{Melitz}} < \theta_{\mathrm{EK}} < \theta_{\mathrm{Krugman}}$$
 
 This ordering reflects the richness of each model's micro-structure:
 - **BEJK** has Bertrand variable markups that compress prices → needs the lowest $\theta$.
