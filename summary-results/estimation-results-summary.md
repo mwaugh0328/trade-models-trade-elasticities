@@ -31,7 +31,7 @@ Single moment condition: `E[d_ni^data - d_ni^model(θ)] = 0`.
 
 Three moment conditions: d\_ni (max price gap), d\_ni2 (85th pctile price gap), cov(d\_ni, log distance). Optimal weighting matrix.
 
-| Model | Year | θ | 80% CI | J-stat | J pctile | Moment 1 (model/data) | Moment 2 (model/data) | Moment 3 (model/data) |
+| Model | Year | θ | (p10–p90) | J-stat | J pctile | Moment 1 (model/data) | Moment 2 (model/data) | Moment 3 (model/data) |
 |-------|------|-----|--------|--------|----------|----------------------|----------------------|----------------------|
 | **BEJK** | 2004 | 2.76 | 2.71 – 2.83 | 23.3 | 0.68 | 0.95 / 0.93 | 0.36 / 0.37 | 0.07 / 0.09 |
 | **BEJK** | 2011 | 2.80 | 2.74 – 2.88 | 173.2 | 1.00 | 0.96 / 0.98 | 0.34 / 0.34 | 0.07 / 0.25 |
@@ -54,7 +54,7 @@ Three moment conditions: d\_ni (max price gap), d\_ni2 (85th pctile price gap), 
 
 ### Exactly Identified
 
-| σ | Year | θ | 80% CI |
+| σ | Year | θ | (p10–p90) |
 |---|------|-----|--------|
 | 1.5 | 2004 | 2.82 | 2.73 – 2.93 |
 | 1.5 | 2011 | 2.73 | 2.66 – 2.85 |
@@ -71,7 +71,7 @@ Three moment conditions: d\_ni (max price gap), d\_ni2 (85th pctile price gap), 
 
 ### Over-Identified
 
-| σ | Year | θ | 80% CI | J-stat | J pctile |
+| σ | Year | θ | (p10–p90) | J-stat | J pctile |
 |---|------|-----|--------|--------|----------|
 | 1.5 | 2004 | 2.76 | 2.71 – 2.83 | 23.3 | 0.68 |
 | 1.5 | 2011 | 2.80 | 2.74 – 2.88 | 173.2 | 1.00 |
@@ -96,7 +96,7 @@ Incorporates asymmetric country size (number of varieties proportional to expend
 
 ### Over-Identified
 
-| Year | θ | 80% CI | J-stat | J pctile | Moment 1 (model/data) |
+| Year | θ | (p10–p90) | J-stat | J pctile | Moment 1 (model/data) |
 |------|-----|--------|--------|----------|----------------------|
 | 2004 | 3.72 | 3.55 – 3.93 | 122.1 | 0.89 | 0.92 / 0.93 |
 | 2011 | 3.39 | 3.03 – 3.57 | 45.5 | 0.42 | 1.05 / 0.98 |
@@ -104,7 +104,7 @@ Incorporates asymmetric country size (number of varieties proportional to expend
 
 ### Exactly Identified
 
-| Year | θ | 80% CI |
+| Year | θ | (p10–p90) |
 |------|-----|--------|
 | 2017 | 3.65 | 3.76 – 3.81 |
 
@@ -116,7 +116,7 @@ Incorporates asymmetric country size (number of varieties proportional to expend
 
 ### Exactly Identified
 
-| σ | Year | θ | 80% CI |
+| σ | Year | θ | (p10–p90) |
 |---|------|-----|--------|
 | 1.5 | 2004 | 1.65 | 1.51 – 1.80 |
 | 1.5 | 2011 | 1.50 | 1.38 – 1.58 |
@@ -133,7 +133,7 @@ Incorporates asymmetric country size (number of varieties proportional to expend
 
 ### Over-Identified
 
-| σ | Year | θ | 80% CI | J-stat | J pctile |
+| σ | Year | θ | (p10–p90) | J-stat | J pctile |
 |---|------|-----|--------|--------|----------|
 | 2.0 | 2004 | 2.05 | 1.93 – 2.51 | 149.5 | 0.49 |
 | 2.0 | 2011 | 2.03 | 1.96 – 2.50 | 12.3 | 0.10 |
