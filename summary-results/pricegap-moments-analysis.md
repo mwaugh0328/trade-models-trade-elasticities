@@ -53,71 +53,71 @@ The `d_ni2` measure is substantially smaller (mean ≈ 0.34 vs. 0.94) and less d
 
 ### 2. Correlation Analysis
 
-The notebook computes Pearson correlations (with p-values) between log price gap moments and three gravity variables. The expected signs are: positive for distance (more distant pairs → larger price gaps), negative for shared border (contiguity → smaller gaps), and positive for tariffs (higher barriers → larger gaps).
+The notebook computes Pearson correlations (with p-values) between the price gap moments and three gravity variables. The expected signs are: positive for distance (more distant pairs → larger price gaps), negative for shared border (contiguity → smaller gaps), and positive for tariffs (higher barriers → larger gaps).
 
 #### Correlations for `d_ni`
 
-| Year | N    | corr(log dni, log dist) | p-value | corr(log dni, border) | p-value | corr(log dni, log(1+tariff)) | p-value |
-|------|------|------------------------:|--------:|----------------------:|--------:|-----------------------------:|--------:|
-| All  | 2604 |                   0.485 |  0.0000 |                -0.232 |  0.0000 |                        0.350 |  0.0000 |
-| 2004 |  866 |                   0.308 |  0.0000 |                -0.123 |  0.0003 |                        0.265 |  0.0000 |
-| 2011 |  868 |                   0.562 |  0.0000 |                -0.263 |  0.0000 |                        0.425 |  0.0000 |
-| 2017 |  870 |                   0.558 |  0.0000 |                -0.294 |  0.0000 |                        0.430 |  0.0000 |
+| Year | N    | corr(dni, log dist) | p-value | corr(dni, border) | p-value | corr(dni, log(1+tariff)) | p-value |
+|------|------|--------------------:|--------:|------------------:|--------:|-------------------------:|--------:|
+| All  | 2604 |               0.422 |  0.0000 |            -0.183 |  0.0000 |                    0.338 |  0.0000 |
+| 2004 |  866 |               0.278 |  0.0000 |            -0.108 |  0.0014 |                    0.261 |  0.0000 |
+| 2011 |  868 |               0.472 |  0.0000 |            -0.196 |  0.0000 |                    0.409 |  0.0000 |
+| 2017 |  870 |               0.501 |  0.0000 |            -0.240 |  0.0000 |                    0.450 |  0.0000 |
 
 #### Correlations for `d_ni2`
 
-| Year | N    | corr(log dni2, log dist) | p-value | corr(log dni2, border) | p-value | corr(log dni2, log(1+tariff)) | p-value |
-|------|------|-------------------------:|--------:|-----------------------:|--------:|------------------------------:|--------:|
-| All  | 2604 |                    0.537 |  0.0000 |                 -0.241 |  0.0000 |                         0.359 |  0.0000 |
-| 2004 |  866 |                    0.384 |  0.0000 |                 -0.158 |  0.0000 |                         0.244 |  0.0000 |
-| 2011 |  868 |                    0.654 |  0.0000 |                 -0.309 |  0.0000 |                         0.433 |  0.0000 |
-| 2017 |  870 |                    0.575 |  0.0000 |                 -0.255 |  0.0000 |                         0.423 |  0.0000 |
+| Year | N    | corr(dni2, log dist) | p-value | corr(dni2, border) | p-value | corr(dni2, log(1+tariff)) | p-value |
+|------|------|---------------------:|--------:|-------------------:|--------:|--------------------------:|--------:|
+| All  | 2604 |                0.501 |  0.0000 |             -0.208 |  0.0000 |                     0.349 |  0.0000 |
+| 2004 |  866 |                0.371 |  0.0000 |             -0.144 |  0.0000 |                     0.246 |  0.0000 |
+| 2011 |  868 |                0.605 |  0.0000 |             -0.263 |  0.0000 |                     0.404 |  0.0000 |
+| 2017 |  870 |                0.536 |  0.0000 |             -0.222 |  0.0000 |                     0.418 |  0.0000 |
 
-All correlations are highly significant (p ≈ 0) and in the expected direction across every year and for both measures. Distance is the strongest correlate (0.31–0.65), followed by tariffs (0.24–0.43), with border effects more modest (-0.12 to -0.31). The `d_ni2` measure shows slightly stronger distance correlations than the `d_ni` measure, suggesting the 85th percentile may be less noisy than the max.
+All correlations are highly significant (p ≈ 0) and in the expected direction across every year and for both measures. Distance is the strongest correlate (0.28–0.61), followed by tariffs (0.25–0.45), with border effects more modest (-0.11 to -0.26). The `d_ni2` measure shows slightly stronger distance correlations than the `d_ni` measure, suggesting the 85th percentile may be less noisy than the max.
 
 ### 3. Regression Analysis
 
 The notebook estimates OLS regressions of the form:
 
 ```
-log(d_ni) = α_year + β₁ · border + β₂ · log(dist) + β₃ · log(1 + 0.01 · tariff) + ε_ni
+d_ni = α_year + β₁ · border + β₂ · log(dist) + β₃ · log(1 + 0.01 · tariff) + ε_ni
 ```
 
-with year fixed effects, for both `d_ni` and `d_ni2`.
+with year fixed effects, for both `d_ni` and `d_ni2`. Since `d_ni` is already in log-price units (i.e., `exp(d_ni)` represents the trade cost level), the dependent variable is not logged.
 
-#### Regression: log(d_ni)
-
-| Variable          | Coef    | Std Err | t       | p-value | [95% CI]          |
-|-------------------|--------:|--------:|--------:|--------:|-------------------|
-| Intercept         | -1.555  |   0.070 | -22.34  |   0.000 | [-1.692, -1.419]  |
-| year = 2011       |  0.020  |   0.018 |   1.11  |   0.267 | [-0.015,  0.056]  |
-| year = 2017       | -0.019  |   0.018 |  -1.03  |   0.303 | [-0.055,  0.017]  |
-| border            | -0.077  |   0.034 |  -2.28  |   0.023 | [-0.143, -0.011]  |
-| log(dist)         |  0.169  |   0.009 |  18.74  |   0.000 | [ 0.151,  0.186]  |
-| log(1+tariff)     |  1.755  |   0.203 |   8.66  |   0.000 | [ 1.358,  2.153]  |
-
-R² = 0.260, N = 2,604, F = 182.6
-
-#### Regression: log(d_ni2)
+#### Regression: d_ni
 
 | Variable          | Coef    | Std Err | t       | p-value | [95% CI]          |
 |-------------------|--------:|--------:|--------:|--------:|-------------------|
-| Intercept         | -2.615  |   0.062 | -42.05  |   0.000 | [-2.737, -2.493]  |
-| year = 2011       | -0.097  |   0.016 |  -5.97  |   0.000 | [-0.128, -0.065]  |
-| year = 2017       | -0.138  |   0.016 |  -8.44  |   0.000 | [-0.170, -0.106]  |
-| border            | -0.037  |   0.030 |  -1.24  |   0.216 | [-0.097,  0.022]  |
-| log(dist)         |  0.190  |   0.008 |  23.65  |   0.000 | [ 0.174,  0.206]  |
-| log(1+tariff)     |  1.199  |   0.181 |   6.62  |   0.000 | [ 0.844,  1.554]  |
+| Intercept         | -0.235  |   0.069 |  -3.40  |   0.001 | [-0.370, -0.099]  |
+| year = 2011       |  0.078  |   0.018 |   4.34  |   0.000 | [ 0.043,  0.113]  |
+| year = 2017       |  0.017  |   0.018 |   0.93  |   0.354 | [-0.019,  0.052]  |
+| border            | -0.032  |   0.034 |  -0.96  |   0.339 | [-0.098,  0.034]  |
+| log(dist)         |  0.135  |   0.009 |  15.11  |   0.000 | [ 0.117,  0.152]  |
+| log(1+tariff)     |  1.973  |   0.201 |   9.81  |   0.000 | [ 1.579,  2.367]  |
 
-R² = 0.325, N = 2,604, F = 250.4
+R² = 0.212, N = 2,604, F = 139.9
+
+#### Regression: d_ni2
+
+| Variable          | Coef    | Std Err | t       | p-value | [95% CI]          |
+|-------------------|--------:|--------:|--------:|--------:|-------------------|
+| Intercept         | -0.084  |   0.020 |  -4.25  |   0.000 | [-0.122, -0.045]  |
+| year = 2011       | -0.027  |   0.005 |  -5.26  |   0.000 | [-0.037, -0.017]  |
+| year = 2017       | -0.040  |   0.005 |  -7.76  |   0.000 | [-0.050, -0.030]  |
+| border            | -0.001  |   0.010 |  -0.11  |   0.909 | [-0.020,  0.018]  |
+| log(dist)         |  0.055  |   0.003 |  21.53  |   0.000 | [ 0.050,  0.060]  |
+| log(1+tariff)     |  0.394  |   0.057 |   6.85  |   0.000 | [ 0.281,  0.506]  |
+
+R² = 0.287, N = 2,604, F = 209.6
 
 #### Interpretation
 
-- **Distance** is highly significant in both regressions (t ≈ 19–24). A 10% increase in bilateral distance raises the price gap by about 1.7–1.9%.
-- **Tariffs** are also highly significant (t ≈ 7–9). The large coefficients (1.2–1.8) mean that tariff variation generates substantial price gap variation — this is the key identifying variation for θ.
-- **Border** is marginally significant for `d_ni` (p = 0.023) and insignificant for `d_ni2` (p = 0.216), suggesting that contiguity effects are mostly absorbed by distance.
-- **Year effects** are insignificant for `d_ni` but highly significant for `d_ni2`, with negative coefficients for 2011 and 2017 relative to 2004, consistent with the declining trend in `d_ni2` summary statistics.
-- The `d_ni2` regression has higher R² (0.325 vs. 0.260), confirming that the 85th percentile measure has a stronger signal-to-noise ratio than the max.
+- **Distance** is highly significant in both regressions (t ≈ 15–22). A 10% increase in bilateral distance raises the price gap `d_ni` by about 0.013 (and `d_ni2` by about 0.005). Since `exp(d_ni)` represents the trade cost level, these effects translate into meaningful increases in trade costs.
+- **Tariffs** are also highly significant (t ≈ 7–10). The large coefficient on `d_ni` (1.97) means that tariff variation generates substantial price gap variation — this is the key identifying variation for θ.
+- **Border** is insignificant in both regressions (p = 0.34 for `d_ni`, p = 0.91 for `d_ni2`), suggesting that contiguity effects are absorbed by distance.
+- **Year effects**: The 2011 dummy is significant and positive for `d_ni` (consistent with the higher mean in 2011), while both 2011 and 2017 are significantly negative for `d_ni2`, consistent with the declining trend in `d_ni2` summary statistics.
+- The `d_ni2` regression has higher R² (0.287 vs. 0.212), confirming that the 85th percentile measure has a stronger signal-to-noise ratio than the max.
 
 ## Connection to the Estimation
 

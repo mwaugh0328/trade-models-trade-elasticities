@@ -14,8 +14,11 @@ all_dfs = DataFrame[]
 
 for year in years
     df = DataFrame(CSV.File("./data/pricegap-df-" * year * ".csv"))
+
     dftariffs = DataFrame(CSV.File("./data/tariffs-" * year * ".csv"))
+
     grav_file = "./data/top30_gravity_data.csv"
+
     dfgrav = DataFrame(CSV.File(grav_file))
 
     rename!(df, Dict("exporter" => "iso_o", "importer" => "iso_d"))
@@ -73,14 +76,14 @@ println("90% confidence interval: ", ci_90)
 
 
 
-outreg = reg(big_df, @formula(log(dni) ~  fe(year) + border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
+outreg = reg(big_df, @formula((dni) ~  fe(year) + border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
 
 # # Run regression with year fixed effect
 
 println(outreg)
 
 
-outreg = reg(big_df, @formula(log(dni) ~  fe(year) + fe(importer) + fe(exporter) +border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
+outreg = reg(big_df, @formula((dni) ~  fe(year) + fe(importer) + fe(exporter) +border + log(dist) + log(1.0 + 0.01*tariff)), save = true, tol = 1e-10)
 
 # # Run regression with year fixed effect
 
