@@ -10,9 +10,9 @@ Single moment condition: `E[d_ni^data - d_ni^model(θ)] = 0`.
 
 | Model | Year | θ | 80% CI (p10–p90) | Data Moment | Model Moment |
 |-------|------|-----|-------------------|-------------|--------------|
-| **BEJK** | 2004 | 2.82 | 2.73 – 2.93 | 0.93 | 0.93 |
-| **BEJK** | 2011 | 2.73 | 2.66 – 2.85 | 0.98 | 0.98 |
-| **BEJK** | 2017 | 2.87 | 2.76 – 3.00 | 0.91 | 0.91 |
+| **BEJK** (σ=2.5) | 2004 | 3.28 | 3.13 – 3.36 | 0.93 | 0.93 |
+| **BEJK** (σ=2.5) | 2011 | 3.19 | 3.08 – 3.30 | 0.98 | 0.98 |
+| **BEJK** (σ=2.5) | 2017 | 3.33 | 3.21 – 3.43 | 0.91 | 0.91 |
 | **Melitz** | 2004 | 3.50 | 3.06 – 3.90 | 0.93 | 0.93 |
 | **Melitz** | 2011 | 3.30 | 3.10 – 3.83 | 0.98 | 0.98 |
 | **Melitz** | 2017 | 3.32 | 2.83 – 3.73 | 0.91 | 0.91 |
@@ -23,7 +23,7 @@ Single moment condition: `E[d_ni^data - d_ni^model(θ)] = 0`.
 | **Krugman** | 2011 | 4.90 | 4.73 – 5.12 | 0.98 | 0.98 |
 | **Krugman** | 2017 | 5.17 | 4.94 – 5.41 | 0.91 | 0.91 |
 
-**Key takeaway**: The ordering θ\_BEJK < θ\_Melitz < θ\_EK < θ\_Krugman is consistent across all years. Models with richer micro-structure (Bertrand pricing, selection) compress observed price gaps and require lower θ to match the data.
+**Key takeaway**: The ordering θ\_BEJK ≈ θ\_Melitz < θ\_EK < θ\_Krugman is consistent across all years. Models with richer micro-structure (Bertrand pricing, selection) compress observed price gaps and require lower θ to match the data. BEJK results use σ = 2.5.
 
 ---
 
@@ -33,9 +33,9 @@ Three moment conditions: d\_ni (max price gap), d\_ni2 (85th pctile price gap), 
 
 | Model | Year | θ | (p10–p90) | J-stat | J pctile | Moment 1 (model/data) | Moment 2 (model/data) | Moment 3 (model/data) |
 |-------|------|-----|--------|--------|----------|----------------------|----------------------|----------------------|
-| **BEJK** | 2004 | 2.76 | 2.71 – 2.83 | 23.3 | 0.68 | 0.95 / 0.93 | 0.36 / 0.37 | 0.07 / 0.09 |
-| **BEJK** | 2011 | 2.80 | 2.74 – 2.88 | 173.2 | 1.00 | 0.96 / 0.98 | 0.34 / 0.34 | 0.07 / 0.25 |
-| **BEJK** | 2017 | 2.88 | 2.81 – 2.95 | 180.7 | 1.00 | 0.91 / 0.91 | 0.33 / 0.32 | 0.06 / 0.20 |
+| **BEJK** (σ=2.5) | 2004 | 3.13 | 3.08 – 3.20 | 86.3 | 1.00 | 0.98 / 0.93 | 0.35 / 0.37 | 0.09 / 0.09 |
+| **BEJK** (σ=2.5) | 2011 | 3.13 | 3.07 – 3.21 | 192.5 | 1.00 | 1.00 / 0.98 | 0.34 / 0.34 | 0.09 / 0.25 |
+| **BEJK** (σ=2.5) | 2017 | 3.24 | 3.18 – 3.32 | 183.9 | 1.00 | 0.94 / 0.91 | 0.32 / 0.32 | 0.07 / 0.20 |
 | **EK** | 2004 | 4.00 | 3.91 – 4.12 | 10.7 | 0.38 | 0.95 / 0.93 | 0.36 / 0.37 | 0.09 / 0.09 |
 | **EK** | 2011 | 4.07 | 3.99 – 4.18 | 136.8 | 0.99 | 0.95 / 0.98 | 0.34 / 0.34 | 0.09 / 0.25 |
 | **EK** | 2017 | 4.18 | 4.09 – 4.31 | 139.3 | 1.00 | 0.91 / 0.91 | 0.32 / 0.32 | 0.07 / 0.20 |
@@ -155,7 +155,7 @@ Incorporates asymmetric country size (number of varieties proportional to expend
 
 | Model | 2004 | 2011 | 2017 | Avg |
 |-------|------|------|------|-----|
-| BEJK (σ=1.5) | 2.82 | 2.73 | 2.87 | 2.81 |
+| BEJK (σ=2.5) | 3.28 | 3.19 | 3.33 | 3.27 |
 | Melitz | 3.50 | 3.30 | 3.32 | 3.37 |
 | EK | 4.09 | 3.94 | 4.19 | 4.07 |
 | Krugman | 5.19 | 4.90 | 5.17 | 5.09 |
