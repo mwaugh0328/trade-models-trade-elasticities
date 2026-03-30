@@ -479,7 +479,7 @@ end
 # Simulates bilateral trade patterns and micro-level prices from the Melitz model
 # following the Simonovska-Waugh (SW) parameterization.
 
-# # Model Setup (SW / Chaney 2008 Assumptions)
+# Model Setup (SW / Chaney 2008 Assumptions)
 
 # This implementation assumes fixed export costs are proportional to origin country size:
 #     fᵢⱼ = f ⋅ Lᵢ
@@ -509,19 +509,19 @@ end
 #    every market. This set is smaller than in EK, which is why θ_Melitz < θ_EK for
 #    the same data — selection compresses observed price gaps.
 
-# # Arguments
+# Arguments
 # - `S::Vector`: Technology parameters (analogous to Tᵢ in EK) for each country
 # - `d::Matrix`: Bilateral trade costs (iceberg), d[i,j] = cost for j to sell in i
 # - `θ::Real`: Pareto shape parameter (governs productivity dispersion)
 # - `Ngoods::Int=10000`: Number of potential goods to simulate per country
 # - `code::Int=1`: Seed modifier for reproducibility across different runs
 
-# # Returns
+# Returns
 # - `m::Matrix`: Bilateral trade share matrix, m[i,j] = share of i's expenditure on j
 # - `final_price::Matrix`: Price matrix, final_price[i, :] = prices faced by importer i
 # - `common_set::Vector{Bool}`: Indicator for goods sold in all countries (for SW estimation)
 
-# # References
+# References
 # - Simonovska, I. and Waugh, M.E. "Trade Models, Trade Elasticities, and the Gains from Trade"
 # - Chaney, T. (2008) "Distorted Gravity: The Intensive and Extensive Margins of International Trade"
 # - Melitz, M.J. (2003) "The Impact of Trade on Intra-Industry Reallocations and Aggregate Industry Productivity"

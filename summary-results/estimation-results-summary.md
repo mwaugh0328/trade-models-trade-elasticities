@@ -94,14 +94,6 @@ Three moment conditions: d\_ni (max price gap), d\_ni2 (85th pctile price gap), 
 
 Incorporates asymmetric country size (number of varieties proportional to expenditure).
 
-### Over-Identified
-
-| Year | θ | (p10–p90) | J-stat | J pctile | Moment 1 (model/data) | Moment 2 (model/data) | Moment 3 (model/data) |
-|------|----|--------|--------|----------|----------------------|----------------------|----------------------|
-| 2004 | 3.72 | 3.55 – 3.93 | 122.1 | 0.89 | 0.92 / 0.93 | 0.34 / 0.37 | 0.21 / 0.09 |
-| 2011 | 3.39 | 3.03 – 3.57 | 45.5 | 0.42 | 1.05 / 0.98 | 0.31 / 0.34 | 0.25 / 0.25 |
-| 2017 | 3.51 | 3.23 – 4.02 | 45.4 | 0.36 | 0.95 / 0.91 | 0.28 / 0.32 | 0.22 / 0.20 |
-
 ### Exactly Identified
 
 | Year | θ | (p10–p90) | Data Moment | Model Moment |
@@ -109,6 +101,14 @@ Incorporates asymmetric country size (number of varieties proportional to expend
 | 2004 | 3.68 | 3.28 – 4.04 | 0.93 | 0.93 |
 | 2011 | 3.62 | 3.31 – 4.12 | 0.98 | 0.98 |
 | 2017 | 3.65 | 3.25 – 4.06 | 0.91 | 0.91 |
+
+### Over-Identified
+
+| Year | θ | (p10–p90) | J-stat | J pctile | Moment 1 (model/data) | Moment 2 (model/data) | Moment 3 (model/data) |
+|------|----|--------|--------|----------|----------------------|----------------------|----------------------|
+| 2004 | 3.72 | 3.55 – 3.93 | 122.1 | 0.89 | 0.92 / 0.93 | 0.34 / 0.37 | 0.21 / 0.09 |
+| 2011 | 3.39 | 3.03 – 3.57 | 45.5 | 0.42 | 1.05 / 0.98 | 0.31 / 0.34 | 0.25 / 0.25 |
+| 2017 | 3.51 | 3.23 – 4.02 | 45.4 | 0.36 | 0.95 / 0.91 | 0.28 / 0.32 | 0.22 / 0.20 |
 
 **Key takeaway**: Model 2 substantially lowers θ compared to baseline Krugman (from ~5.0 to ~3.5–3.7) and dramatically improves moment fit (J drops from ~1000 to ~50-120). Accounting for country size effects matters significantly for the Krugman framework.
 
