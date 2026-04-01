@@ -18,7 +18,7 @@ This codebase estimates the trade elasticity (θ) — a key parameter governing 
 | **Krugman** | Monopolistic competition, love of variety, no comparative advantage | θ (governs CES elasticity η = θ + 1) |
 | **Melitz** | Heterogeneous firms with export selection (only productive firms export) | θ (Pareto shape), σ (CES elasticity) |
 
-Each model also has a "Model 2" variant (Krugman-model2, Melitz-model2) that incorporates asymmetric country size effects on the extensive margin.
+Krugman also has a "Model 2" variant (Krugman-model2) that incorporates asymmetric country size effects on the extensive margin.
 
 ## Repository Structure
 
@@ -47,7 +47,7 @@ Each model also has a "Model 2" variant (Krugman-model2, Melitz-model2) that inc
 │   ├── estimate-bejk-model.jl       # Runner script for BEJK estimation
 │   ├── estimate-krugman-model.jl    # Runner script for Krugman estimation
 │   ├── estimate-melitz-model.jl     # Runner script for Melitz estimation
-│   ├── estimate-*-model2.jl         # Runner scripts for Model 2 variants
+│   ├── estimate-krugman-model2.jl   # Runner script for Krugman Model 2 variant
 │   ├── estimate-bejk-model-sigma-loop.jl # BEJK estimation over multiple σ values
 │   ├── pricegap-moments.jl          # Exploratory analysis of price gap moments
 │   ├── pricegap-moments-allyears.jl # Price gap analysis pooled across years
@@ -59,7 +59,6 @@ Each model also has a "Model 2" variant (Krugman-model2, Melitz-model2) that inc
 │   ├── combined-exact-results.csv           # Just-identified estimates (all models)
 │   ├── combined-over-results.csv            # Over-identified estimates (all models)
 │   ├── combined-bejk-sigma-*.csv            # BEJK sensitivity to σ
-│   ├── combined-melitz-model2-sigma-*.csv   # Melitz Model 2 sensitivity to σ
 │   ├── combined-krugman-model2-*.csv        # Krugman Model 2 results
 │   ├── estimation-results-summary.md        # Tabular summary of all results
 │   ├── pricegap-moments-analysis.md         # Discussion of price gap data properties

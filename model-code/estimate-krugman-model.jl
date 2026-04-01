@@ -11,6 +11,7 @@ using Optimization
 using OptimizationOptimJL
 using OptimizationPRIMA
 using LinearAlgebra
+using Dates
 ################################################################
 
 year = ["2004", "2011", "2017"]
@@ -22,7 +23,7 @@ Ngoods = 1000
 σ = 1.5
 
 dirname = "./data/"
-date = "12726"
+date = Dates.format(today(), "yyyy-mm-dd")
 
 ##############################################################################################################################
 method = "over"

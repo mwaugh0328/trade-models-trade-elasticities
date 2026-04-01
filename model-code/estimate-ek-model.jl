@@ -1,6 +1,6 @@
 include("gravity-tools.jl")
 include("trade-environment.jl")
-include("simmulate-trade-models.jl")
+include("simulate-trade-models.jl")
 include("estimate-trade-models.jl")
 using CSV
 using DataFrames
@@ -11,6 +11,7 @@ using Optimization
 using OptimizationOptimJL
 using OptimizationPRIMA
 using LinearAlgebra
+using Dates
 ################################################################
 
 
@@ -24,7 +25,7 @@ Ngoods = 100000
 σ = 1.5
 
 dirname = "./data/"
-date = "12726"
+date = Dates.format(today(), "yyyy-mm-dd")
 
 # ##############################################################################################################################
 method = "over"

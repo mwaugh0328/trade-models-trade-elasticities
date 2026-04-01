@@ -11,6 +11,7 @@ using Optimization
 using OptimizationOptimJL
 using OptimizationPRIMA
 using LinearAlgebra
+using Dates
 ################################################################
 
 year = ["2004", "2011", "2017"]
@@ -19,22 +20,23 @@ model = "melitz"
 Nruns = 36
 Nboots = 100
 Ngoods = 50000
+σ = 1.5
 
 dirname = "./data/"
-date = "12926-sigma-theta"
+sigma_str = replace(string(σ), "." => "")
+date = Dates.format(today(), "yyyy-mm-dd")
 
 ##############################################################################################################################
 method = "over"
-σ = 1.5
 
 dfout = estimate_all(year, σ, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
 
-CSV.write("./results/"*model*"-estimate-"*method*"-"*date*".csv", dfout; writeheader = true)
+CSV.write("./results/"*model*"-estimate-"*method*"-sigma"*sigma_str*"-"*date*".csv", dfout; writeheader = true)
 
 ##############################################################################################################################
 
 method = "exact"
-    
+
 dfout = estimate_all(year, σ, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
 
-CSV.write("./results/"*model*"-estimate-"*method*"-"*date*".csv", dfout; writeheader = true)
+CSV.write("./results/"*model*"-estimate-"*method*"-sigma"*sigma_str*"-"*date*".csv", dfout; writeheader = true)
