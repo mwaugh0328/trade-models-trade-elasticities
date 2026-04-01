@@ -172,38 +172,6 @@ Accounting for asymmetric country size substantially lowers $\theta$ estimates r
 
 ---
 
-## 6. Melitz Model 2 — Expenditure-Weighted Extensive Margin
-
-### Difference from Baseline Melitz
-
-Baseline Melitz uses the Chaney/SW proportional fixed cost assumption ($f_{ij} = f \cdot L_i$) which makes the extensive margin depend only on $S$ and $d$, not on expenditure $E$. Melitz Model 2 modifies this so that **the cost cutoff and the extensive margin depend on destination expenditure**. This corresponds to an alternative assumption about fixed export costs where market size (expenditure) affects entry decisions.
-
-The differences are:
-
-1. **Cost cutoff**: Incorporates expenditure:
-
-$$\bar{c}_j = E_j^{1/\theta} \cdot \widetilde{\Phi}_j^{-1/\theta}$$
-
-where $\widetilde{\Phi}_j = \sum_{k} S_k \cdot d_{jk}^{-\theta}$ (same multilateral resistance term). Larger markets have higher cutoffs, allowing more varieties to survive. Referenced as "equation 54" in the code.
-
-2. **Trade share weighting**: Each exporter's contribution is weighted by $E_i^{\kappa}$ where:
-
-$$\kappa = \frac{\theta}{\sigma - 1} - 1$$
-
-This captures the idea that exporters from larger economies contribute differently to the import bundle, weighted by their extensive margin of varieties. Referenced as "equation 56" in the code.
-
-3. **Price sampling**: When selecting goods from the common set for price gap computation, goods are sampled with weights proportional to $E_i^{\kappa}$ (matching the trade share weighting), rather than uniformly.
-
-### Additional Parameter
-
-Melitz Model 2 takes $E$ (expenditure vector) as an additional input, whereas baseline Melitz uses only $S$, $d$, $\theta$, and $\sigma$.
-
-### Effect on Estimates
-
-Melitz Model 2 produces the **lowest $\theta$ estimates** of any specification, especially at low $\sigma$. At $\sigma = 1.5$, estimates are around $\theta \approx 1.5$–$1.7$, roughly half the baseline Melitz value. Like BEJK, $\theta$ increases with $\sigma$. The expenditure-weighted extensive margin generates additional price gap variation beyond what baseline Melitz's selection mechanism provides, reducing the burden on $\theta$.
-
----
-
 ## Summary: Model Ordering
 
 The models form a consistent ordering in $\theta$ estimates:
@@ -216,4 +184,4 @@ This ordering reflects the richness of each model's micro-structure:
 - **EK** is perfectly competitive with no selection → moderate $\theta$.
 - **Krugman** has no within-country heterogeneity and no selection → needs the highest $\theta$ to generate sufficient price variation.
 
-The "Model 2" variants (Krugman Model 2, Melitz Model 2) incorporate country size via expenditure $E_i$. Both produce lower $\theta$ than their baselines because expenditure-driven variation substitutes for productivity dispersion in explaining the data.
+The Krugman Model 2 variant incorporates country size via expenditure $E_i$, producing lower $\theta$ than baseline Krugman because expenditure-driven variation substitutes for productivity dispersion in explaining the data.

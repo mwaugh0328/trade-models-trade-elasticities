@@ -1,6 +1,6 @@
 # Trade Models, Trade Elasticities, and the Gains from Trade
 
-Repository for **"Trade Models, Trade Elasticities, and the Gains from Trade"** (JIE-ISOT version).
+Repository for **[Trade Models, Trade Elasticities, and the Gains from Trade](trade-elasticities.pdf)** (JIE-ISOT version).
 
 This codebase estimates the trade elasticity (θ) — a key parameter governing the gains from trade — under four different structural trade models using international price gap data and bilateral trade flows. The key insight is that different trade models imply different mappings from θ to observable price gaps, so the same data yields different estimates depending on the assumed model.
 
