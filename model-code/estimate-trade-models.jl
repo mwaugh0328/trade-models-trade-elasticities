@@ -1,10 +1,12 @@
+using Parameters
+
 function make_trade_data(directory, year)
     # A function to load and prepare the trade data for estimation
     # df, dftrade, dfcountryfix = make_trade_data(directory, year[1])
 
-    df = DataFrame(CSV.File(directory*"pricegap-df-"*year*".csv"))
+    df = DataFrame(CSV.File(joinpath(directory, "pricegap-df-" * year * ".csv")))
 
-    grav_file = directory*"top30_gravity_data.csv"
+    grav_file = joinpath(directory, "top30_gravity_data.csv")
 
     dfgrav = DataFrame(CSV.File(grav_file))
 
@@ -12,7 +14,7 @@ function make_trade_data(directory, year)
 
     df = innerjoin(df, dfgrav, on = ["iso_o", "iso_d"])
 
-    dftariffs = DataFrame(CSV.File(directory*"tariffs-"*year*".csv"))
+    dftariffs = DataFrame(CSV.File(joinpath(directory, "tariffs-" * year * ".csv")))
 
     rename!(dftariffs, Dict("exporter" => "iso_o", "importer" => "iso_d"))
 
@@ -29,7 +31,7 @@ function make_trade_data(directory, year)
 
     ################################################################
 
-    dftrade = DataFrame(CSV.File(directory*"tradeshare-df-"*year*".csv"))
+    dftrade = DataFrame(CSV.File(joinpath(directory, "tradeshare-df-" * year * ".csv")))
 
     dftrade[!,"trade"] = log.(dftrade[!,"norm_tradeshare"] )
 
@@ -54,12 +56,6 @@ function estimate_all(years, σ, model, method, Nruns, Nboots, directory; Ngoods
 
 
     for yyy in years
-
-        if yyy == "2004"
-
-            dfout = DataFrame()
-
-        end
 
         if yyy == "2004"
 

@@ -23,7 +23,9 @@ Nboots = 100
 Ngoods = 100000
 σ = 2.5
 
-dirname = "./data/"
+repo_root = normpath(joinpath(@__DIR__, ".."))
+dirname = joinpath(repo_root, "data")
+results_dir = joinpath(repo_root, "results")
 sigma_str = replace(string(σ), "." => "")
 date = Dates.format(today(), "yyyy-mm-dd")
 
@@ -32,7 +34,7 @@ method = "over"
 
 dfout = estimate_all(year, σ, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
 
-CSV.write("./results/"*model*"-estimate-"*method*"-sigma"*sigma_str*"-"*date*".csv", dfout; writeheader = true)
+CSV.write(joinpath(results_dir, model*"-estimate-"*method*"-sigma"*sigma_str*"-"*date*".csv"), dfout; writeheader = true)
 
 # # ##############################################################################################################################
 
@@ -40,4 +42,4 @@ method = "exact"
 
 dfout = estimate_all(year, σ, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
 
-CSV.write("./results/"*model*"-estimate-"*method*"-sigma"*sigma_str*"-"*date*".csv", dfout; writeheader = true)
+CSV.write(joinpath(results_dir, model*"-estimate-"*method*"-sigma"*sigma_str*"-"*date*".csv"), dfout; writeheader = true)

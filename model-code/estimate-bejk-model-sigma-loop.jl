@@ -22,7 +22,9 @@ Nruns = 36
 Nboots = 100
 Ngoods = 100000
 
-dirname = "./data/"
+repo_root = normpath(joinpath(@__DIR__, ".."))
+dirname = joinpath(repo_root, "data")
+results_dir = joinpath(repo_root, "results")
 date = Dates.format(today(), "yyyy-mm-dd")
 
 # Loop over different sigma values
@@ -37,7 +39,7 @@ for σ in 1.5:0.5:3.0
 
     dfout = estimate_all(year, σ, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
 
-    CSV.write("./results/"*model*"-estimate-"*method*"-sigma"*sigma_str*"-"*date*".csv", dfout; writeheader = true)
+    CSV.write(joinpath(results_dir, model*"-estimate-"*method*"-sigma"*sigma_str*"-"*date*".csv"), dfout; writeheader = true)
 
     ###############################################################################################################################
 
@@ -45,7 +47,7 @@ for σ in 1.5:0.5:3.0
 
     dfout = estimate_all(year, σ, model, method, Nruns, Nboots, dirname; Ngoods = Ngoods)
 
-    CSV.write("./results/"*model*"-estimate-"*method*"-sigma"*sigma_str*"-"*date*".csv", dfout; writeheader = true)
+    CSV.write(joinpath(results_dir, model*"-estimate-"*method*"-sigma"*sigma_str*"-"*date*".csv"), dfout; writeheader = true)
 
     println("Completed estimation for σ = ", σ)
     println("="^80)
